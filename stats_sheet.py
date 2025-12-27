@@ -1,4 +1,5 @@
 import os
+import json
 import datetime
 from collections import defaultdict
 
@@ -38,15 +39,32 @@ def _client() -> gspread.Client:
     if _GSPREAD_CLIENT is not None:
         return _GSPREAD_CLIENT
 
-    if not os.path.exists(SERVICE_ACCOUNT_FILE):
-        raise FileNotFoundError(
-            f"Service account file not found: '{SERVICE_ACCOUNT_FILE}'. "
-            "Make sure it is in the same folder as your bot or use a full path."
-        )
+    # 1) Preferred: Railway/hosting - JSON from env var
+    raw = os.getenv("GOOGLE_CREDS_JSON")
+    if raw:
+        try:
+            info = json.loads(raw)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                "GOOGLE_CREDS_JSON is set but is not valid JSON. "
+                "Paste the full service account JSON exactly."
+            ) from e
 
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    _GSPREAD_CLIENT = gspread.authorize(creds)
-    return _GSPREAD_CLIENT
+        creds = Credentials.from_service_account_info(info, scopes=SCOPES)
+        _GSPREAD_CLIENT = gspread.authorize(creds)
+        return _GSPREAD_CLIENT
+
+    # 2) Fallback: local dev - JSON file on disk
+    if os.path.exists(SERVICE_ACCOUNT_FILE):
+        creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        _GSPREAD_CLIENT = gspread.authorize(creds)
+        return _GSPREAD_CLIENT
+
+    raise FileNotFoundError(
+        f"Service account credentials not found.\n"
+        f"- Set GOOGLE_CREDS_JSON env var (recommended for hosting)\n"
+        f"- OR place '{SERVICE_ACCOUNT_FILE}' next to your bot (local dev)\n"
+    )
 
 
 def _book() -> gspread.Spreadsheet:
