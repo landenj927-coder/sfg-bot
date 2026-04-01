@@ -249,13 +249,21 @@ class SFGBot(commands.Bot):
             traceback.print_exc()
 
         try:
+            await self.load_extension("cogs.members")
+            print("✅ Loaded cog: members.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load members.py: {e}")
+            traceback.print_exc()
+
+        try:
             await self.load_extension("cogs.lfp")
             print("✅ Loaded cog: lfp.py")
         except Exception as e:
             import traceback
             print(f"❌ Failed to load lfp.py: {e}")
             traceback.print_exc()
-            
+
         try:
             await self.load_extension("cogs.gamereport")
             print("✅ Loaded cog: gamereport.py")
