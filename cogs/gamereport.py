@@ -74,21 +74,17 @@ class GameReport(commands.Cog):
             )
 
         # =========================
-        # JSON PARSE (SAFE)
+        # JSON PARSE (FIXED)
         # =========================
         try:
             raw = await json_file.read()
-
             text = raw.decode("utf-8", errors="ignore")
 
-            # 🔥 FIX: find first JSON object
             start = text.find("{")
-
             if start == -1:
-                raise ValueError("No JSON object found in file.")
+                raise ValueError("No JSON object found.")
 
-            clean_json = text[start:]  # remove "50 - 14 /// "
-
+            clean_json = text[start:]
             game_data = json.loads(clean_json)
 
         except Exception as e:
@@ -96,6 +92,8 @@ class GameReport(commands.Cog):
                 f"❌ Invalid JSON file.\n`{e}`",
                 ephemeral=True
             )
+
+        try:
             # =========================
             # UPDATE STANDINGS
             # =========================
@@ -107,44 +105,35 @@ class GameReport(commands.Cog):
             # =========================
             processed_players = set()
 
-            for player in game_data.get("players", []):
+            for player in game_data.values():  # 🔥 FIXED LOOP
                 qb = player.get("qb", {})
                 wr = player.get("wr", {})
                 db = player.get("db", {})
                 de = player.get("def", {})
 
-                # 🔥 NAME RESOLUTION (IMPORTANT)
+                other = player.get("other", {})
+
                 name = (
-                    player.get("display")
-                    or player.get("name")
-                    or player.get("username")
-                    or str(player.get("id"))
+                    other.get("display")
+                    or other.get("name")
+                    or "Unknown"
                 )
 
-                if not name:
-                    continue
+                team_name = other.get("team", "Free Agent")
 
-                # prevent duplicates in same report
                 if name in processed_players:
                     continue
                 processed_players.add(name)
 
-                # 🔥 TEAM DETECTION (basic for now)
-                team_name = "Free Agent"
-
-                # QB
                 if qb.get("yds", 0) > 0:
                     append_qb_statline(name, team_name, qb)
 
-                # WR
                 if wr.get("yds", 0) > 0:
                     append_wr_statline(name, team_name, wr)
 
-                # DB
                 if db.get("int", 0) > 0 or db.get("defl", 0) > 0:
                     append_db_statline(name, team_name, db)
 
-                # DE
                 if de.get("sack", 0) > 0:
                     append_de_statline(name, team_name, de)
 
@@ -156,9 +145,7 @@ class GameReport(commands.Cog):
             # =========================
             # POST TO SCORES CHANNEL
             # =========================
-            scores_channel = discord.utils.get(guild.channels, name="scores")
-
-            winner = team1_name if score1 > score2 else team2_name
+            scores_channel = discord.utils.get(guild.text_channels, name="scores")
 
             embed = discord.Embed(
                 title="🏈 Matchup Report",
