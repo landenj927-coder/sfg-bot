@@ -295,8 +295,9 @@ class SFGBot(commands.Bot):
         # SYNC COMMANDS
         # =========================
 
+        @bot.event
         async def on_ready(self):
-            print(f"🚀 Logged in as {self.user}")
+            print(f"🚀 Logged in as {bot.user}")
 
             guild = discord.Object(id=GUILD_ID)
             self.tree.copy_global_to(guild=guild)
