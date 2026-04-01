@@ -249,11 +249,22 @@ class SFGBot(commands.Bot):
             traceback.print_exc()
 
         try:
-            await self.load_extension("cogs.gamereport")  # 🔥 NEW
+            await self.load_extension("cogs.gamereport")
             print("✅ Loaded cog: gamereport.py")
         except Exception as e:
             import traceback
             print(f"❌ Failed to load gamereport.py: {e}")
+            traceback.print_exc()
+
+        # =========================
+        # 🔥 NEW PANEL COG
+        # =========================
+        try:
+            await self.load_extension("cogs.panel")
+            print("✅ Loaded cog: panel.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load panel.py: {e}")
             traceback.print_exc()
 
         # =========================
