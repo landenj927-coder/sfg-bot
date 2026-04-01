@@ -2,6 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from utils.config import GUILD_ID  # 🔥 REQUIRED FOR INSTANT SYNC
+
 # =========================
 # CONFIG (EDIT THESE)
 # =========================
@@ -22,6 +24,7 @@ class Panel(commands.Cog):
         name="panel",
         description="Post the SFG info panel"
     )
+    @app_commands.guilds(discord.Object(id=GUILD_ID))  # 🔥 FIX (instant command)
     @app_commands.checks.has_permissions(administrator=True)
     async def panel(self, interaction: discord.Interaction):
 
@@ -120,10 +123,3 @@ class Panel(commands.Cog):
         )
 
         await interaction.channel.send(embed=embed, view=view)
-
-
-# =========================
-# SETUP
-# =========================
-async def setup(bot):
-    await bot.add_cog(Panel(bot))
