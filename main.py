@@ -21,8 +21,6 @@ from stats_sheet import (
     append_db_statline,
     append_de_statline,
     update_playerstats_top15,
-    report_already_processed,
-    log_processed_report,
 )
 from utils.standings import NFL_TEAMS, STANDINGS_LOCK, load_standings, save_standings, post_or_update_standings
 from utils.helpers import log_transaction, find_text_channel_fuzzy, normalize_channel_name
