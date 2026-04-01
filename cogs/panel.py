@@ -5,10 +5,10 @@ from discord.ext import commands
 # =========================
 # CONFIG (EDIT THESE)
 # =========================
-RULES_CHANNEL_ID = 123456789012345678
-SUPPORT_SERVER_LINK = "https://discord.gg/YOURSERVER"
-ROBLOX_GROUP_LINK = "https://www.roblox.com/groups/YOURGROUP"
-SPREADSHEET_LINK = "https://docs.google.com/spreadsheets/d/YOUR_SHEET"
+RULES_CHANNEL_ID = 1488378922788851822
+SUPPORT_SERVER_LINK = "https://discord.gg/vd5zD7aZvg"
+ROBLOX_GROUP_LINK = "https://www.roblox.com/communities/8329126/SFG-Payouts#!/about"
+SPREADSHEET_LINK = "https://docs.google.com/spreadsheets/d/1jxBjAM8BBobPgFsqwAKKl1XhhwtKPtE8D-EnFQOlrT8/edit?gid=1763133934#gid=1763133934"
 
 
 class Panel(commands.Cog):
