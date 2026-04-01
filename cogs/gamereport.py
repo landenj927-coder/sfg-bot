@@ -13,7 +13,7 @@ from stats_sheet import (
     append_de_statline,
 )
 
-SCORES_CHANNEL_ID = 123456789012345678  # 🔥 PUT YOUR CHANNEL ID HERE
+SCORES_CHANNEL_ID = 1488381961301917807  # 🔥 PUT YOUR CHANNEL ID HERE
 
 NFL_TEAMS = [
     "Arizona","Atlanta","Baltimore","Buffalo","Carolina","Chicago","Cincinnati","Cleveland",
