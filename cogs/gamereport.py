@@ -117,6 +117,8 @@ class GameReport(commands.Cog):
 
                 if de.get("sack", 0) > 0:
                     append_de_statline(name, team, de)
+                
+            update_playerstats_top15()
 
             # =========================
             # POST TO SCORES
@@ -179,5 +181,3 @@ async def setup(bot):
     await bot.add_cog(GameReport(bot))
 
 from stats_sheet import update_playerstats_top15
-
-update_playerstats_top15()
