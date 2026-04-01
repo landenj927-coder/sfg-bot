@@ -1,48 +1,47 @@
 import os
-import datetime
-from collections import defaultdict
-
+import json
 import gspread
 from google.oauth2.service_account import Credentials
 
 print("STATS_SHEET FILE LOADED")
 
-# ---------------- CONFIG ----------------
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
-
-SERVICE_ACCOUNT_FILE = "sfg-discord-bot-d8bb550b91fa.json"
+# =========================
+# CONFIG
+# =========================
 SPREADSHEET_ID = "1jxBjAM8BBobPgFsqwAKKl1XhhwtKPtE8D-EnFQOlrT8"
 
-TAB_PLAYERSTATS = "PlayerStats"
-TAB_QB = "QB"
-TAB_WR = "WR"
-TAB_DB = "DB"
-TAB_DE = "DE"
-TAB_REPORTS = "Reports"
-
-DATA_START_ROW = 8
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
+]
 
 _GSPREAD_CLIENT = None
 _SPREADSHEET = None
-_WS_CACHE = {}
 
 
-# ---------------- CONNECTION ----------------
+# =========================
+# CONNECT TO GOOGLE SHEETS (ENV VERSION)
+# =========================
 def _client():
     global _GSPREAD_CLIENT
+
     if _GSPREAD_CLIENT:
         return _GSPREAD_CLIENT
 
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    creds_dict = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
+
+    creds = Credentials.from_service_account_info(
+        creds_dict,
+        scopes=SCOPES
+    )
+
     _GSPREAD_CLIENT = gspread.authorize(creds)
     return _GSPREAD_CLIENT
 
 
 def _book():
     global _SPREADSHEET
+
     if _SPREADSHEET:
         return _SPREADSHEET
 
@@ -50,137 +49,123 @@ def _book():
     return _SPREADSHEET
 
 
-def get_ws(name):
-    if name in _WS_CACHE:
-        return _WS_CACHE[name]
+# =========================
+# ENSURE SHEETS EXIST
+# =========================
+def ensure_sheets():
+    book = _book()
 
-    ws = _book().worksheet(name)
-    _WS_CACHE[name] = ws
-    return ws
+    required = ["QB", "WR", "DB", "DE", "PlayerStats"]
+
+    existing = [ws.title for ws in book.worksheets()]
+
+    for name in required:
+        if name not in existing:
+            book.add_worksheet(title=name, rows=1000, cols=20)
 
 
-# ---------------- STAT APPEND (UPDATED) ----------------
-
-def append_qb_statline(name, team, qb):
-    ws = get_ws(TAB_QB)
+# =========================
+# APPEND STAT FUNCTIONS
+# =========================
+def append_qb_statline(player):
+    ws = _book().worksheet("QB")
 
     ws.append_row([
-        name,
-        team,
-        qb.get("rtng", 0),
-        qb.get("comp", 0),
-        qb.get("yds", 0),
-        qb.get("td", 0),
-        qb.get("int", 0)
+        player.get("name"),
+        player.get("team"),
+        player["qb"].get("rtng", 0),
+        player["qb"].get("comp", 0),
+        player["qb"].get("yds", 0),
+        player["qb"].get("td", 0),
+        player["qb"].get("int", 0),
     ])
 
 
-def append_wr_statline(name, team, wr):
-    ws = get_ws(TAB_WR)
+def append_wr_statline(player):
+    ws = _book().worksheet("WR")
 
     ws.append_row([
-        name,
-        team,
-        wr.get("catch", 0),
-        wr.get("yds", 0),
-        wr.get("td", 0),
-        wr.get("fum", 0)
+        player.get("name"),
+        player.get("team"),
+        player["wr"].get("rec", 0),
+        player["wr"].get("yds", 0),
+        player["wr"].get("td", 0),
+        player["wr"].get("fum", 0),
     ])
 
 
-def append_db_statline(name, team, db):
-    ws = get_ws(TAB_DB)
+def append_db_statline(player):
+    ws = _book().worksheet("DB")
 
     ws.append_row([
-        name,
-        team,
-        db.get("defl", 0),
-        db.get("int", 0),
-        db.get("rtng", 0)
+        player.get("name"),
+        player.get("team"),
+        player["db"].get("defl", 0),
+        player["db"].get("int", 0),
+        player["db"].get("rtng", 0),
     ])
 
 
-def append_de_statline(name, team, de):
-    ws = get_ws(TAB_DE)
+def append_de_statline(player):
+    ws = _book().worksheet("DE")
 
     ws.append_row([
-        name,
-        team,
-        de.get("sack", 0),
-        de.get("safe", 0),
-        de.get("ffum", 0)
+        player.get("name"),
+        player.get("team"),
+        player["def"].get("sack", 0),
+        player["def"].get("safe", 0),
+        player["def"].get("ffum", 0),
     ])
 
 
-# ---------------- TOP 15 SYSTEM (UNCHANGED CORE) ----------------
-
+# =========================
+# UPDATE TOP 15 LEADERBOARD
+# =========================
 def update_playerstats_top15():
     book = _book()
-    ws_ps = get_ws(TAB_PLAYERSTATS)
+    ws = book.worksheet("PlayerStats")
 
-    # QB
-    qb_rows = get_ws(TAB_QB).get_all_values()[DATA_START_ROW-1:]
-    qb_agg = defaultdict(lambda: {"player":"", "team":"", "qbr_sum":0, "n":0, "comp":0, "yds":0, "tds":0, "ints":0})
+    qb_ws = book.worksheet("QB")
+    wr_ws = book.worksheet("WR")
+    db_ws = book.worksheet("DB")
+    de_ws = book.worksheet("DE")
 
-    for r in qb_rows:
-        if not r:
-            continue
+    # get all values
+    qb_data = qb_ws.get_all_values()[1:]
+    wr_data = wr_ws.get_all_values()[1:]
+    db_data = db_ws.get_all_values()[1:]
+    de_data = de_ws.get_all_values()[1:]
 
-        player = r[0]
-        team = r[1]
+    # sort (example logic — can upgrade later)
+    qb_sorted = sorted(qb_data, key=lambda x: float(x[4]), reverse=True)[:15]
+    wr_sorted = sorted(wr_data, key=lambda x: float(x[3]), reverse=True)[:15]
+    db_sorted = sorted(db_data, key=lambda x: float(x[2]), reverse=True)[:15]
+    de_sorted = sorted(de_data, key=lambda x: float(x[2]), reverse=True)[:15]
 
-        qb_agg[player]["player"] = player
-        qb_agg[player]["team"] = team
-        qb_agg[player]["qbr_sum"] += float(r[2])
-        qb_agg[player]["n"] += 1
-        qb_agg[player]["comp"] += int(r[3])
-        qb_agg[player]["yds"] += int(r[4])
-        qb_agg[player]["tds"] += int(r[5])
-        qb_agg[player]["ints"] += int(r[6])
+    ws.clear()
 
-    qb_list = []
-    for v in qb_agg.values():
-        avg = v["qbr_sum"] / v["n"] if v["n"] else 0
-        qb_list.append([v["player"], v["team"], round(avg,2), v["comp"], v["yds"], v["tds"], v["ints"]])
+    # QB section
+    ws.append_row(["QB LEADERS"])
+    for row in qb_sorted:
+        ws.append_row(row)
 
-    qb_list.sort(key=lambda x: (x[2], x[4]), reverse=True)
+    ws.append_row([""])
 
-    # WR
-    wr_rows = get_ws(TAB_WR).get_all_values()[DATA_START_ROW-1:]
-    wr_list = [r for r in wr_rows if r]
-    wr_list.sort(key=lambda x: (int(x[3]), int(x[2])), reverse=True)
+    # WR section
+    ws.append_row(["WR LEADERS"])
+    for row in wr_sorted:
+        ws.append_row(row)
 
-    # DB
-    db_rows = get_ws(TAB_DB).get_all_values()[DATA_START_ROW-1:]
-    db_list = [r for r in db_rows if r]
-    db_list.sort(key=lambda x: (float(x[4]), int(x[3])), reverse=True)
+    ws.append_row([""])
 
-    # DE
-    de_rows = get_ws(TAB_DE).get_all_values()[DATA_START_ROW-1:]
-    de_list = [r for r in de_rows if r]
-    de_list.sort(key=lambda x: (int(x[2]), int(x[4])), reverse=True)
+    # DB section
+    ws.append_row(["DB LEADERS"])
+    for row in db_sorted:
+        ws.append_row(row)
 
-    # WRITE TOP 15
-    ws_ps.update("A8:G22", qb_list[:15])
-    ws_ps.update("I8:N22", wr_list[:15])
-    ws_ps.update("A26:E40", db_list[:15])
-    ws_ps.update("I26:M40", de_list[:15])
+    ws.append_row([""])
 
-
-# ---------------- REPORT TRACKING ----------------
-
-def report_already_processed(report_id):
-    ws = get_ws(TAB_REPORTS)
-    return report_id in [r[0] for r in ws.get_all_values()[1:]]
-
-
-def log_processed_report(report_id, game_id, user_id, summary):
-    ws = get_ws(TAB_REPORTS)
-
-    ws.append_row([
-        report_id,
-        game_id,
-        user_id,
-        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        summary
-    ])
+    # DE section
+    ws.append_row(["DE LEADERS"])
+    for row in de_sorted:
+        ws.append_row(row)
