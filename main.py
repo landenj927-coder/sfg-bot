@@ -302,6 +302,7 @@ bot = SFGBot()
 
 @bot.event
 async def on_ready():
+    print("ON_READY_TRIGGERED")
     print(f"🚀 Logged in as {bot.user}")
 
     guild = discord.Object(id=GUILD_ID)
