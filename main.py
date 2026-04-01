@@ -306,9 +306,6 @@ async def on_ready():
 
     guild = discord.Object(id=GUILD_ID)
 
-    # 🔥 FULL RESET
-    bot.tree.clear_commands(guild=guild)
-
     synced = await bot.tree.sync(guild=guild)
 
     print(f"🏠 Guild Synced: {len(synced)} commands")
