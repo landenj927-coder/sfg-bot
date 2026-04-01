@@ -6,10 +6,8 @@ from datetime import datetime
 from utils.config import GUILD_ID
 from utils.helpers import find_text_channel_fuzzy
 
-# =========================
-# IMPORT FROM MAIN (SHARED DATA)
-# =========================
-from main import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, SFG_LOGO_URL
+# ✅ FIXED IMPORT (NO MORE main.py)
+from utils.constants import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, SFG_LOGO_URL
 
 
 class LFP(commands.Cog):
@@ -61,7 +59,7 @@ class LFP(commands.Cog):
         # =========================
         # FIND FREE AGENCY CHANNEL
         # =========================
-        channel = find_text_channel_fuzzy(guild, "Free Agency")
+        channel = find_text_channel_fuzzy(guild, "free agency")
 
         if not channel:
             return await interaction.response.send_message(
@@ -77,7 +75,7 @@ class LFP(commands.Cog):
 
         embed = discord.Embed(
             title="Free Agency",
-            description=f"**Looking for Players**\n\n{team_role.mention} are looking for players!",
+            description=f"{team_role.mention} is looking for players!",
             color=color,
             timestamp=datetime.utcnow()
         )
@@ -114,7 +112,7 @@ class LFP(commands.Cog):
 
 
 # =========================
-# SETUP (REQUIRED)
+# SETUP
 # =========================
 async def setup(bot):
     await bot.add_cog(LFP(bot))
