@@ -7,7 +7,7 @@ from discord import app_commands
 # =========================
 GUILD_ID = 1194481657584042106
 
-SFG_LOGO_URL = "https://media.discordapp.net/attachments/1448865755650330734/1448890098299965511/39515399-0233-4dfd-b76d-06b8a850fb3e.png"
+SFG_LOGO_URL = "https://cdn.discordapp.com/attachments/1488380244237750412/1488996490662641884/sfgblue.png?ex=69cecf8b&is=69cd7e0b&hm=e61d9dc84c14639b2fe81789485534b39a98432a3d1291c71b1abee6332fc8c2&"
 
 ROSTER_LIMIT = 14
 

@@ -9,6 +9,7 @@ from utils.config import (
 )
 
 from utils.helpers import log_transaction
+from utils.standings import TEAM_EMOJIS
 
 
 class OfferView(discord.ui.View):
@@ -19,42 +20,54 @@ class OfferView(discord.ui.View):
         self.coach = coach
 
     # 🔥 ELITE EMBED BUILDER
-    def build_embed(self, title: str, description: str, status: str = "neutral") -> discord.Embed:
+    def build_embed(self, description: str, status: str = "neutral") -> discord.Embed:
         team_name = self.team_role.name
+        emoji = TEAM_EMOJIS.get(team_name, "")
 
         base_color = TEAM_COLORS.get(team_name, 0x2F3136)
 
-        # 🔥 STATUS COLORS
+        # 🎯 STATUS SYSTEM
         if status == "accepted":
-            color = 0x57F287  # green
+            color = 0x57F287
+            header = "🟢 SIGNING CONFIRMED"
         elif status == "declined":
-            color = 0xED4245  # red
+            color = 0xED4245
+            header = "🔴 OFFER DECLINED"
         else:
             color = base_color
+            header = f"{emoji} OFFER RECEIVED"
 
         thumb_url = TEAM_THUMBNAILS.get(team_name)
 
         embed = discord.Embed(
-            title=f"🏈 {title}",
-            description=description,
+            title=header,
+            description=f"**{description}**",
             color=color,
             timestamp=datetime.utcnow()
         )
 
-        # 🔥 HEADER BRANDING
+        # 🔥 SFG HEADER
         embed.set_author(
-            name="SFG League",
+            name="SFG League Transactions",
             icon_url=SFG_LOGO_URL
         )
 
-        # 🔥 TEAM LOGO
+        # 🏈 TEAM LOGO
         if thumb_url:
             embed.set_thumbnail(url=thumb_url)
 
-        # 🔥 CLEAN FIELDS
+        divider = "━━━━━━━━━━━━━━━━━━"
+
+        # 📊 CORE INFO
         embed.add_field(
             name="🏟 Team",
-            value=f"**{team_name}**",
+            value=f"{emoji} **{team_name}**",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🧑 Player",
+            value=self.player.mention,
             inline=True
         )
 
@@ -64,15 +77,19 @@ class OfferView(discord.ui.View):
             inline=True
         )
 
+        # 🔥 VISUAL BREAK
+        embed.add_field(name=divider, value="\u200b", inline=False)
+
+        # 📢 DETAILS
         embed.add_field(
-            name="🧑‍🤝‍🧑 Player",
-            value=self.player.mention,
-            inline=True
+            name="📢 Details",
+            value=description,
+            inline=False
         )
 
-        # 🔥 FOOTER
+        # 🏁 FOOTER
         embed.set_footer(
-            text="SFG League • Transactions",
+            text="SFG League • Official Transaction Feed",
             icon_url=SFG_LOGO_URL
         )
 
@@ -98,7 +115,6 @@ class OfferView(discord.ui.View):
             )
 
             embed = self.build_embed(
-                "Offer Declined",
                 f"{self.player.mention} tried to accept, but **{self.team_role.name}** is full.",
                 status="declined"
             )
@@ -114,7 +130,6 @@ class OfferView(discord.ui.View):
         )
 
         embed = self.build_embed(
-            "Offer Accepted",
             f"{self.player.mention} has **accepted** the offer from {self.coach.mention}.",
             status="accepted"
         )
@@ -139,7 +154,6 @@ class OfferView(discord.ui.View):
         )
 
         embed = self.build_embed(
-            "Offer Declined",
             f"{self.player.mention} has **declined** the offer from {self.coach.mention}.",
             status="declined"
         )

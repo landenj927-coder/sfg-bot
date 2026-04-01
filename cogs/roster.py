@@ -13,6 +13,7 @@ from utils.config import (
 )
 
 from utils.constants import ROSTER_LIMIT
+from utils.standings import TEAM_EMOJIS
 
 
 class Roster(commands.Cog):
@@ -42,6 +43,8 @@ class Roster(commands.Cog):
             )
 
         team_name = team_role.name
+        emoji = TEAM_EMOJIS.get(team_name, "")
+
         players = team_role.members
 
         color = TEAM_COLORS.get(team_name, 0x2F3136)
@@ -61,7 +64,7 @@ class Roster(commands.Cog):
         presidents = staff_for_team(president_role)
         gms = staff_for_team(gm_role)
 
-        # 🔥 CLEAN PLAYER LIST
+        # 🔥 CLEAN ROSTER LIST
         if players:
             roster_lines = [f"`{i:>2}.` {m.mention}" for i, m in enumerate(players, start=1)]
             roster_text = "\n".join(roster_lines)
@@ -69,22 +72,25 @@ class Roster(commands.Cog):
             roster_text = "*No players signed.*"
 
         embed = discord.Embed(
-            title=f"🏈 {team_name} Roster",
+            title=f"{emoji} TEAM ROSTER",
+            description=f"**{team_name}**",
             color=color,
             timestamp=datetime.utcnow()
         )
 
-        # 🔥 SFG HEADER
+        # 🔥 HEADER BRANDING
         embed.set_author(
             name="SFG League",
             icon_url=SFG_LOGO_URL
         )
 
-        # 🔥 TEAM LOGO
+        # 🏈 TEAM LOGO
         if thumb_url:
             embed.set_thumbnail(url=thumb_url)
 
-        # 🔥 MANAGEMENT SECTION
+        divider = "━━━━━━━━━━━━━━━━━━"
+
+        # 👑 MANAGEMENT SECTION
         embed.add_field(
             name="👑 Management",
             value=(
@@ -95,16 +101,19 @@ class Roster(commands.Cog):
             inline=False
         )
 
-        # 🔥 ROSTER SECTION
+        # 🔥 DIVIDER
+        embed.add_field(name=divider, value="\u200b", inline=False)
+
+        # 📋 ROSTER SECTION
         embed.add_field(
-            name=f"📋 Players ({len(players)}/{ROSTER_LIMIT})",
+            name=f"📋 Active Roster ({len(players)}/{ROSTER_LIMIT})",
             value=roster_text,
             inline=False
         )
 
         # 🔥 FOOTER
         embed.set_footer(
-            text="SFG League • Rosters",
+            text="SFG League • Official Team Roster",
             icon_url=SFG_LOGO_URL
         )
 
