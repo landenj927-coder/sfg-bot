@@ -79,26 +79,23 @@ class GameReport(commands.Cog):
         try:
             raw = await json_file.read()
 
-            if raw.startswith(b"\x89PNG") or raw.startswith(b"\xff\xd8"):
-                raise ValueError("You uploaded an image instead of JSON.")
+            text = raw.decode("utf-8", errors="ignore")
 
-            text = raw.decode("utf-8", errors="ignore").strip()
+            # 🔥 FIX: find first JSON object
+            start = text.find("{")
 
-            # 🔥 FIX: handle multiple JSON objects
-            if text.count("{") > 1 and text.count("}") > 1:
-                # grab FIRST valid JSON block only
-                first_obj = text[:text.find("}") + 1]
-                game_data = json.loads(first_obj)
-            else:
-                game_data = json.loads(text)
+            if start == -1:
+                raise ValueError("No JSON object found in file.")
+
+            clean_json = text[start:]  # remove "50 - 14 /// "
+
+            game_data = json.loads(clean_json)
 
         except Exception as e:
             return await interaction.followup.send(
                 f"❌ Invalid JSON file.\n`{e}`",
                 ephemeral=True
-                )
-
-        try:
+            )
             # =========================
             # UPDATE STANDINGS
             # =========================
