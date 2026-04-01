@@ -2995,6 +2995,5 @@ async def gamereport(
 # =========================
 # RUN
 # =========================
-bot = SFGBot()
 
 bot.run(os.getenv("DISCORD_TOKEN"))
