@@ -121,19 +121,45 @@ class GameReport(commands.Cog):
 
                 # QB
                 if qb.get("yds", 0) > 0:
-                    append_qb_statline(name, team_name, qb)
+                    append_qb_statline(
+                        name,
+                        team_name,
+                        qb.get("comp", 0),
+                        qb.get("yds", 0),
+                        qb.get("td", 0),
+                        qb.get("int", 0)
+                    )
 
                 # WR
                 if wr.get("yds", 0) > 0:
-                    append_wr_statline(name, team_name, wr)
+                    append_wr_statline(
+                        name,
+                        team_name,
+                        wr.get("rec", 0),
+                        wr.get("yds", 0),
+                        wr.get("td", 0),
+                        wr.get("fum", 0)
+                    )
 
                 # DB
                 if db.get("int", 0) > 0 or db.get("defl", 0) > 0:
-                    append_db_statline(name, team_name, db)
+                    append_db_statline(
+                        name,
+                        team_name,
+                        db.get("defl", 0),
+                        db.get("int", 0),
+                        db.get("rtng", 0)
+                    )
 
                 # DE
                 if de.get("sack", 0) > 0:
-                    append_de_statline(name, team_name, de)
+                    append_de_statline(
+                        name,
+                        team_name,
+                        de.get("sack", 0),
+                        de.get("safe", 0),
+                        de.get("ffum", 0)
+                    )
 
             # =========================
             # 🔥 SINGLE WRITE TO SHEETS
@@ -143,7 +169,7 @@ class GameReport(commands.Cog):
             # =========================
             # POST TO SCORES
             # =========================
-            SCORES_CHANNEL_ID = 1488381961301917807  # put your real ID
+            SCORES_CHANNEL_ID = 1488381961301917807  # your channel ID
 
             scores_channel = guild.get_channel(SCORES_CHANNEL_ID)
 
@@ -198,5 +224,3 @@ class GameReport(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(GameReport(bot))
-
-commit_all_stats()
