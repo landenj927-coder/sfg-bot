@@ -11,159 +11,135 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-SPREADSHEET_ID = "1jxBjAM8BBobPgFsqwAKKl1XhhwtKPtE8D-EnFQOlrT8"
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 
-_client_cache = None
-
-
+# =========================
+# CLIENT / BOOK
+# =========================
 def _client():
-    global _client_cache
-
-    if _client_cache:
-        return _client_cache
-
-    creds_json = os.getenv("GOOGLE_CREDENTIALS")
-
-    if not creds_json:
-        raise Exception("GOOGLE_CREDENTIALS not set in Railway")
-
-    creds_dict = json.loads(creds_json)
-
+    creds_dict = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-    _client_cache = gspread.authorize(creds)
-
-    return _client_cache
-
+    return gspread.authorize(creds)
 
 def _book():
     return _client().open_by_key(SPREADSHEET_ID)
 
-
 # =========================
-# IN-MEMORY STORAGE
+# MEMORY (AGGREGATED STATS)
 # =========================
 QB_DATA = {}
 WR_DATA = {}
 DB_DATA = {}
 DE_DATA = {}
 
+# =========================
+# HELPERS
+# =========================
+def _get_player(store, name, team):
+    if name not in store:
+        store[name] = {
+            "team": team,
+            "qbr": 0, "comp": 0, "yds": 0, "td": 0, "int": 0,
+            "rec": 0, "fum": 0,
+            "defl": 0, "rtng": 0,
+            "sack": 0, "safe": 0, "ff": 0
+        }
+    return store[name]
 
 # =========================
-# APPEND / MERGE FUNCTIONS
+# ADD STATS (AGGREGATED)
 # =========================
-def append_qb_statline(name, team, qb):
-    p = QB_DATA.setdefault(name, {
-        "team": team,
-        "qbr": 0,
-        "comp": 0,
-        "yds": 0,
-        "td": 0,
-        "int": 0
-    })
+def append_qb_statline(player, team, qbr, comp, yds, td, ints):
+    p = _get_player(QB_DATA, player, team)
+    p["qbr"] = qbr
+    p["comp"] += comp
+    p["yds"] += yds
+    p["td"] += td
+    p["int"] += ints
 
-    p["qbr"] = float(qb.get("rtng", 0) or 0)
-    p["comp"] += int(qb.get("comp", 0) or 0)
-    p["yds"] += int(qb.get("yds", 0) or 0)
-    p["td"] += int(qb.get("td", 0) or 0)
-    p["int"] += int(qb.get("int", 0) or 0)
+def append_wr_statline(player, team, rec, yds, td, fum):
+    p = _get_player(WR_DATA, player, team)
+    p["rec"] += rec
+    p["yds"] += yds
+    p["td"] += td
+    p["fum"] += fum
 
+def append_db_statline(player, team, defl, ints, rtng):
+    p = _get_player(DB_DATA, player, team)
+    p["defl"] += defl
+    p["int"] += ints
+    p["rtng"] = rtng
 
-def append_wr_statline(name, team, wr):
-    p = WR_DATA.setdefault(name, {
-        "team": team,
-        "rec": 0,
-        "yds": 0,
-        "td": 0,
-        "fum": 0
-    })
-
-    p["rec"] += int(wr.get("catch", 0) or 0)
-    p["yds"] += int(wr.get("yds", 0) or 0)
-    p["td"] += int(wr.get("td", 0) or 0)
-    p["fum"] += int(wr.get("fum", 0) or 0)
-
-
-def append_db_statline(name, team, db):
-    p = DB_DATA.setdefault(name, {
-        "team": team,
-        "defl": 0,
-        "int": 0,
-        "rtng": 0
-    })
-
-    p["defl"] += int(db.get("defl", 0) or 0)
-    p["int"] += int(db.get("int", 0) or 0)
-    p["rtng"] += float(db.get("rtng", 0) or 0)
-
-
-def append_de_statline(name, team, de):
-    p = DE_DATA.setdefault(name, {
-        "team": team,
-        "sack": 0,
-        "safe": 0,
-        "ff": 0
-    })
-
-    p["sack"] += int(de.get("sack", 0) or 0)
-    p["safe"] += int(de.get("safe", 0) or 0)
-    p["ff"] += int(de.get("ffum", 0) or 0)
-
+def append_de_statline(player, team, sack, safe, ff):
+    p = _get_player(DE_DATA, player, team)
+    p["sack"] += sack
+    p["safe"] += safe
+    p["ff"] += ff
 
 # =========================
-# WRITE FUNCTION (FIXED)
-# =========================
-def _write_sheet(sheet_name, start_row, rows):
-    sheet = _book().worksheet(sheet_name)
-
-    # clear only data area
-    sheet.batch_clear([f"A{start_row}:Z100"])
-
-    if not rows:
-        return
-
-    sheet.update(f"A{start_row}", rows)
-
-
-# =========================
-# COMMIT ALL STATS
+# COMMIT TO SHEETS (FAST)
 # =========================
 def commit_all_stats():
+    book = _book()
+
+    qb_sheet = book.worksheet("QB")
+    wr_sheet = book.worksheet("WR")
+    db_sheet = book.worksheet("DB")
+    de_sheet = book.worksheet("DE")
+
+    # CLEAR ONLY DATA AREAS
+    qb_sheet.batch_clear(["A8:G100"])
+    wr_sheet.batch_clear(["A8:F100"])
+    db_sheet.batch_clear(["A8:E100"])
+    de_sheet.batch_clear(["A8:E100"])
+
+    # QB
     qb_rows = [
-        [name, p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
-        for name, p in QB_DATA.items()
+        [n, p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
+        for n, p in QB_DATA.items()
     ]
+    if qb_rows:
+        qb_sheet.update("A8", qb_rows)
 
+    # WR
     wr_rows = [
-        [name, p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
-        for name, p in WR_DATA.items()
+        [n, p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
+        for n, p in WR_DATA.items()
     ]
+    if wr_rows:
+        wr_sheet.update("A8", wr_rows)
 
+    # DB
     db_rows = [
-        [name, p["team"], p["defl"], p["int"], p["rtng"]]
-        for name, p in DB_DATA.items()
+        [n, p["team"], p["defl"], p["int"], p["rtng"]]
+        for n, p in DB_DATA.items()
     ]
+    if db_rows:
+        db_sheet.update("A8", db_rows)
 
+    # DE
     de_rows = [
-        [name, p["team"], p["sack"], p["safe"], p["ff"]]
-        for name, p in DE_DATA.items()
+        [n, p["team"], p["sack"], p["safe"], p["ff"]]
+        for n, p in DE_DATA.items()
     ]
-
-    # 🔥 WRITE TO CORRECT POSITIONS
-    _write_sheet("QB", 8, qb_rows)
-    _write_sheet("WR", 8, wr_rows)
-    _write_sheet("DB", 15, db_rows)
-    _write_sheet("DE", 8, de_rows)
+    if de_rows:
+        de_sheet.update("A8", de_rows)
 
     update_playerstats_top15()
 
-
 # =========================
-# LEADERBOARD
+# PLAYERSTATS TOP 15 (PERFECT LAYOUT)
 # =========================
 def update_playerstats_top15():
     sheet = _book().worksheet("PlayerStats")
 
-    sheet.batch_clear(["A5:Z100"])
+    # clear ONLY data zones
+    sheet.batch_clear([
+        "A8:F22",   # QB
+        "H8:M22",   # WR
+        "A26:F40",  # DB
+        "H26:M40"   # DE
+    ])
 
     def top(data, key):
         return sorted(data.items(), key=lambda x: x[1][key], reverse=True)[:15]
@@ -173,21 +149,34 @@ def update_playerstats_top15():
     db_top = top(DB_DATA, "int")
     de_top = top(DE_DATA, "sack")
 
-    row = 5
+    # QB (LEFT TOP)
+    qb_rows = [
+        [n, p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
+        for n, p in qb_top
+    ]
+    if qb_rows:
+        sheet.update("A8", qb_rows)
 
-    def write_section(title, players):
-        nonlocal row
+    # WR (RIGHT TOP)
+    wr_rows = [
+        [n, p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
+        for n, p in wr_top
+    ]
+    if wr_rows:
+        sheet.update("H8", wr_rows)
 
-        sheet.update(f"A{row}", [[title]])
-        row += 1
+    # DB (LEFT BOTTOM)
+    db_rows = [
+        [n, p["team"], p["defl"], p["int"], p["rtng"]]
+        for n, p in db_top
+    ]
+    if db_rows:
+        sheet.update("A26", db_rows)
 
-        for name, p in players:
-            sheet.update(f"A{row}", [[name, p["team"]]])
-            row += 1
-
-        row += 2
-
-    write_section("QB LEADERS", qb_top)
-    write_section("WR LEADERS", wr_top)
-    write_section("DB LEADERS", db_top)
-    write_section("DE LEADERS", de_top)
+    # DE (RIGHT BOTTOM)
+    de_rows = [
+        [n, p["team"], p["sack"], p["safe"], p["ff"]]
+        for n, p in de_top
+    ]
+    if de_rows:
+        sheet.update("H26", de_rows)
