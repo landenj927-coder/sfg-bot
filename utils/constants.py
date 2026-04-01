@@ -46,6 +46,8 @@ TEAM_COLORS = {
     "Washington": 0x5A1414
 }
 
+ROSTER_LIMIT = 14
+
 # =========================
 # TEAM THUMBNAILS (LOGOS)
 # =========================
