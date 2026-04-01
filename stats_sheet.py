@@ -25,7 +25,7 @@ def _book():
     return _client().open_by_key(SPREADSHEET_ID)
 
 # =========================
-# MEMORY (AGGREGATED STATS)
+# MEMORY
 # =========================
 QB_DATA = {}
 WR_DATA = {}
@@ -53,7 +53,7 @@ def _get_player(store, name, team):
     return store[name]
 
 # =========================
-# ADD STATS (AGGREGATED)
+# ADD STATS
 # =========================
 def append_qb_statline(player, team, qbr, comp, yds, td, ints):
     p = _get_player(QB_DATA, player, team)
@@ -83,7 +83,7 @@ def append_de_statline(player, team, sack, safe, ff):
     p["ff"] += ff
 
 # =========================
-# COMMIT TO SHEETS (FAST)
+# COMMIT TO SHEETS
 # =========================
 def commit_all_stats():
     book = _book()
@@ -93,11 +93,11 @@ def commit_all_stats():
     db_sheet = book.worksheet("DB")
     de_sheet = book.worksheet("DE")
 
-    # CLEAR ONLY DATA AREAS
-    qb_sheet.batch_clear(["A8:G100"])
-    wr_sheet.batch_clear(["A8:F100"])
-    db_sheet.batch_clear(["A8:E100"])
-    de_sheet.batch_clear(["A8:E100"])
+    # CLEAR
+    qb_sheet.batch_clear(["D8:J100"])
+    wr_sheet.batch_clear(["D8:I100"])
+    db_sheet.batch_clear(["D8:H100"])
+    de_sheet.batch_clear(["D8:H100"])
 
     # QB
     qb_rows = [
@@ -105,7 +105,7 @@ def commit_all_stats():
         for p in QB_DATA.values()
     ]
     if qb_rows:
-        qb_sheet.update("A8", qb_rows, value_input_option="USER_ENTERED")
+        qb_sheet.update("D8", qb_rows, value_input_option="USER_ENTERED")
 
     # WR
     wr_rows = [
@@ -113,7 +113,7 @@ def commit_all_stats():
         for p in WR_DATA.values()
     ]
     if wr_rows:
-        wr_sheet.update("A8", wr_rows, value_input_option="USER_ENTERED")
+        wr_sheet.update("D8", wr_rows, value_input_option="USER_ENTERED")
 
     # DB
     db_rows = [
@@ -121,7 +121,7 @@ def commit_all_stats():
         for p in DB_DATA.values()
     ]
     if db_rows:
-        db_sheet.update("A8", db_rows, value_input_option="USER_ENTERED")
+        db_sheet.update("D8", db_rows, value_input_option="USER_ENTERED")
 
     # DE
     de_rows = [
@@ -129,21 +129,21 @@ def commit_all_stats():
         for p in DE_DATA.values()
     ]
     if de_rows:
-        de_sheet.update("A8", de_rows, value_input_option="USER_ENTERED")
+        de_sheet.update("D8", de_rows, value_input_option="USER_ENTERED")
 
     update_playerstats_top15()
 
 # =========================
-# PLAYERSTATS TOP 15
+# PLAYERSTATS
 # =========================
 def update_playerstats_top15():
     sheet = _book().worksheet("PlayerStats")
 
     sheet.batch_clear([
         "A8:F22",
-        "G8:L22",   # FIXED SHIFT
+        "I8:N22",
         "A26:F40",
-        "G26:L40"   # FIXED SHIFT
+        "I26:N40"
     ])
 
     def top(data, key):
@@ -162,13 +162,13 @@ def update_playerstats_top15():
     if qb_rows:
         sheet.update("A8", qb_rows, value_input_option="USER_ENTERED")
 
-    # WR (SHIFTED LEFT)
+    # WR (RIGHT SIDE - COLUMN I)
     wr_rows = [
         [p["player"], p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
         for _, p in wr_top
     ]
     if wr_rows:
-        sheet.update("G8", wr_rows, value_input_option="USER_ENTERED")
+        sheet.update("I8", wr_rows, value_input_option="USER_ENTERED")
 
     # DB
     db_rows = [
@@ -178,10 +178,10 @@ def update_playerstats_top15():
     if db_rows:
         sheet.update("A26", db_rows, value_input_option="USER_ENTERED")
 
-    # DE (SHIFTED LEFT)
+    # DE (RIGHT SIDE - COLUMN I)
     de_rows = [
         [p["player"], p["team"], p["sack"], p["safe"], p["ff"]]
         for _, p in de_top
     ]
     if de_rows:
-        sheet.update("G26", de_rows, value_input_option="USER_ENTERED")
+        sheet.update("I26", de_rows, value_input_option="USER_ENTERED")
