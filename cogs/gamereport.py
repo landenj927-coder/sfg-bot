@@ -82,13 +82,21 @@ class GameReport(commands.Cog):
             if raw.startswith(b"\x89PNG") or raw.startswith(b"\xff\xd8"):
                 raise ValueError("You uploaded an image instead of JSON.")
 
-            game_data = json.loads(raw.decode("utf-8"))
+            text = raw.decode("utf-8", errors="ignore").strip()
+
+            # 🔥 FIX: handle multiple JSON objects
+            if text.count("{") > 1 and text.count("}") > 1:
+                # grab FIRST valid JSON block only
+                first_obj = text[:text.find("}") + 1]
+                game_data = json.loads(first_obj)
+            else:
+                game_data = json.loads(text)
 
         except Exception as e:
             return await interaction.followup.send(
                 f"❌ Invalid JSON file.\n`{e}`",
                 ephemeral=True
-            )
+                )
 
         try:
             # =========================
