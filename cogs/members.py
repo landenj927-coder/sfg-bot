@@ -1,55 +1,61 @@
 import discord
 from discord.ext import commands
 
-# 🔧 PUT YOUR CHANNEL ID HERE
-MEMBERS_CHANNEL_ID = 123456789012345678
+MEMBERS_CHANNEL_ID = 123456789012345678  # replace with your real channel ID
 
 
 class Members(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # =========================
-    # MEMBER JOIN
-    # =========================
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        print(f"[MEMBERS COG] on_member_join fired for: {member} ({member.id})")
 
         channel = member.guild.get_channel(MEMBERS_CHANNEL_ID)
-        if not channel:
+        print(f"[MEMBERS COG] join channel found: {channel}")
+
+        if not isinstance(channel, discord.TextChannel):
+            print("[MEMBERS COG] join channel invalid or not found")
             return
 
-        count = member.guild.member_count
+        count = member.guild.member_count or len(member.guild.members)
 
         message = (
-            f"Welcome to Storcit'y Football Gridiron {member.mention} ({member.name}). "
+            f"Welcome to Storcity's Football Gridiron {member.mention} ({member.name}). "
             f"We now have **{count}** in the community."
         )
 
-        await channel.send(message)
+        try:
+            await channel.send(message)
+            print("[MEMBERS COG] join message sent")
+        except Exception as e:
+            print(f"[MEMBERS COG] failed to send join message: {e}")
 
-    # =========================
-    # MEMBER LEAVE
-    # =========================
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        print(f"[MEMBERS COG] on_member_remove fired for: {member} ({member.id})")
 
         channel = member.guild.get_channel(MEMBERS_CHANNEL_ID)
-        if not channel:
+        print(f"[MEMBERS COG] leave channel found: {channel}")
+
+        if not isinstance(channel, discord.TextChannel):
+            print("[MEMBERS COG] leave channel invalid or not found")
             return
 
-        count = member.guild.member_count
+        count = member.guild.member_count or len(member.guild.members)
 
         message = (
-            f"({member.name}) has left Storcit'y Football Gridiron. "
+            f"({member.name}) has left Storcity's Football Gridiron. "
             f"We now have **{count}** in the community."
         )
 
-        await channel.send(message)
+        try:
+            await channel.send(message)
+            print("[MEMBERS COG] leave message sent")
+        except Exception as e:
+            print(f"[MEMBERS COG] failed to send leave message: {e}")
 
 
-# =========================
-# SETUP
-# =========================
 async def setup(bot):
     await bot.add_cog(Members(bot))
