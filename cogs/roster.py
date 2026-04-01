@@ -23,7 +23,7 @@ class Roster(commands.Cog):
         name="roster",
         description="Show the roster for a team role."
     )
-    @app_commands.guilds(discord.Object(id=GUILD_ID))  # 🔥 THIS WAS THE MISSING PIECE
+    @app_commands.guilds(discord.Object(id=GUILD_ID))
     @app_commands.describe(team_role="Mention the team role you want to view (ex: @Tampa)")
     async def roster(self, interaction: discord.Interaction, team_role: discord.Role):
 
@@ -61,34 +61,50 @@ class Roster(commands.Cog):
         presidents = staff_for_team(president_role)
         gms = staff_for_team(gm_role)
 
-        roster_text = (
-            "\n".join(f"{i}. {m.mention}" for i, m in enumerate(players, start=1))
-            if players else "No players."
-        )
+        # 🔥 CLEAN PLAYER LIST
+        if players:
+            roster_lines = [f"`{i:>2}.` {m.mention}" for i, m in enumerate(players, start=1)]
+            roster_text = "\n".join(roster_lines)
+        else:
+            roster_text = "*No players signed.*"
 
         embed = discord.Embed(
-            title=f"{team_name} Roster",
-            description=(
-                f"**Franchise Owner:** {owners}\n"
-                f"**Team President:** {presidents}\n"
-                f"**General Manager:** {gms}\n\n"
-                f"**Roster:**\n{roster_text}"
-            ),
+            title=f"🏈 {team_name} Roster",
             color=color,
             timestamp=datetime.utcnow()
         )
 
+        # 🔥 SFG HEADER
+        embed.set_author(
+            name="SFG League",
+            icon_url=SFG_LOGO_URL
+        )
+
+        # 🔥 TEAM LOGO
         if thumb_url:
             embed.set_thumbnail(url=thumb_url)
 
+        # 🔥 MANAGEMENT SECTION
         embed.add_field(
-            name="Roster Size",
-            value=f"{len(players)} / {ROSTER_LIMIT}",
+            name="👑 Management",
+            value=(
+                f"**Owner:** {owners}\n"
+                f"**President:** {presidents}\n"
+                f"**GM:** {gms}"
+            ),
             inline=False
         )
 
+        # 🔥 ROSTER SECTION
+        embed.add_field(
+            name=f"📋 Players ({len(players)}/{ROSTER_LIMIT})",
+            value=roster_text,
+            inline=False
+        )
+
+        # 🔥 FOOTER
         embed.set_footer(
-            text="SFG Bot",
+            text="SFG League • Rosters",
             icon_url=SFG_LOGO_URL
         )
 
