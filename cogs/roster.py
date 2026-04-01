@@ -88,8 +88,4 @@ class Roster(commands.Cog):
 
 
 async def setup(bot):
-    cog = Roster(bot)
-    await bot.add_cog(cog)
-
-    # 👇 FORCE ADD GROUP TO TREE
-    bot.tree.add_command(cog.roster_group)
+    await bot.add_cog(Roster(bot))
