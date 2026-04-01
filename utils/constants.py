@@ -81,13 +81,13 @@ TEAM_THUMBNAILS = {
     "Seattle": "https://your-logo-link",
     "Tampa": "https://your-logo-link",
     "Tennessee": "https://your-logo-link",
-    "Washington": "https://your-logo-link"
+    "Washington": ""
 }
 
 # =========================
 # SFG BRANDING
 # =========================
-SFG_LOGO_URL = "https://your-sfg-logo-url"
+SFG_LOGO_URL = ""
 
 # =========================
 # CHANNEL NAMES (OPTIONAL)

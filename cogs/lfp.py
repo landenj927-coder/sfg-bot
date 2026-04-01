@@ -79,9 +79,12 @@ class LFP(commands.Cog):
             timestamp=datetime.utcnow()
         )
 
-        # ✅ SAFE THUMBNAIL (prevents crash)
-        if thumb and isinstance(thumb, str) and thumb.startswith("http"):
-            embed.set_thumbnail(url=thumb)
+        # 🔥 BULLETPROOF THUMBNAIL
+        try:
+            if isinstance(thumb, str) and thumb.startswith("http"):
+                embed.set_thumbnail(url=thumb)
+        except:
+            pass
 
         embed.add_field(
             name="Information",
@@ -95,13 +98,13 @@ class LFP(commands.Cog):
             inline=False
         )
 
-        # ✅ SAFE FOOTER (prevents crash)
-        if isinstance(SFG_LOGO_URL, str) and SFG_LOGO_URL.startswith("http"):
-            embed.set_footer(
-                text="SFG Bot",
-                icon_url=SFG_LOGO_URL
-            )
-        else:
+        # 🔥 BULLETPROOF FOOTER
+        try:
+            if isinstance(SFG_LOGO_URL, str) and SFG_LOGO_URL.startswith("http"):
+                embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
+            else:
+                embed.set_footer(text="SFG Bot")
+        except:
             embed.set_footer(text="SFG Bot")
 
         # =========================
