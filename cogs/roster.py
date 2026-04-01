@@ -6,17 +6,17 @@ from typing import Optional
 
 from utils.constants import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, ROSTER_LIMIT, SFG_LOGO_URL
 
+
 class Roster(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        
-    # =========================
-    # /roster
-    # =========================
-    @app_commands.command(name="roster", description="Show the roster for a team role.")
+    # 👇 THIS LINE FORCES REGISTRATION
+    roster_group = app_commands.Group(name="roster", description="Roster commands")
+
+    @roster_group.command(name="view", description="Show the roster for a team role.")
     @app_commands.describe(team_role="Mention the team role you want to view (ex: @Tampa)")
-    async def roster(self, interaction: discord.Interaction, team_role: discord.Role):
+    async def view(self, interaction: discord.Interaction, team_role: discord.Role):
         guild = interaction.guild
 
         if not guild:
@@ -86,6 +86,10 @@ class Roster(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-# REQUIRED FOR COG LOADING
+
 async def setup(bot):
-    await bot.add_cog(Roster(bot))
+    cog = Roster(bot)
+    await bot.add_cog(cog)
+
+    # 👇 FORCE ADD GROUP TO TREE
+    bot.tree.add_command(cog.roster_group)
