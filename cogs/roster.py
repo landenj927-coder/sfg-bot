@@ -4,38 +4,21 @@ from discord import app_commands
 from datetime import datetime
 from typing import Optional
 
-from utils.constants import (
-    NFL_TEAMS,
-    TEAM_COLORS,
-    TEAM_THUMBNAILS,
-    ROSTER_LIMIT,
-    SFG_LOGO_URL
-)
+from utils.constants import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, ROSTER_LIMIT, SFG_LOGO_URL
 
 
 class Roster(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
 
-    # =========================
-    # /roster
-    # =========================
-    @app_commands.command(name="roster", description="Show the roster for a team role.")
-    @app_commands.describe(team_role="Mention the team role you want to view (ex: @Tampa)")
-    async def roster(self, interaction: discord.Interaction, team_role: discord.Role):
+    async def roster_command(self, interaction: discord.Interaction, team_role: discord.Role):
         guild = interaction.guild
 
         if not guild:
-            return await interaction.response.send_message(
-                "Server only command.",
-                ephemeral=True
-            )
+            return await interaction.response.send_message("Server only command.", ephemeral=True)
 
         if team_role.name not in NFL_TEAMS:
-            return await interaction.response.send_message(
-                "Invalid team role.",
-                ephemeral=True
-            )
+            return await interaction.response.send_message("Invalid team role.", ephemeral=True)
 
         team_name = team_role.name
         players = team_role.members
@@ -57,10 +40,7 @@ class Roster(commands.Cog):
         presidents = staff_for_team(president_role)
         gms = staff_for_team(gm_role)
 
-        roster_text = (
-            "\n".join(f"{i}. {m.mention}" for i, m in enumerate(players, start=1))
-            if players else "No players."
-        )
+        roster_text = "\n".join(f"{i}. {m.mention}" for i, m in enumerate(players, start=1)) if players else "No players."
 
         embed = discord.Embed(
             title=f"{team_name} Roster",
@@ -77,22 +57,21 @@ class Roster(commands.Cog):
         if thumb_url:
             embed.set_thumbnail(url=thumb_url)
 
-        embed.add_field(
-            name="Roster Size",
-            value=f"{len(players)} / {ROSTER_LIMIT}",
-            inline=False
-        )
-
-        embed.set_footer(
-            text="SFG Bot",
-            icon_url=SFG_LOGO_URL
-        )
+        embed.add_field(name="Roster Size", value=f"{len(players)} / {ROSTER_LIMIT}", inline=False)
+        embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
 
         await interaction.response.send_message(embed=embed)
 
 
-# =========================
-# REQUIRED FOR COG LOADING
-# =========================
 async def setup(bot):
-    await bot.add_cog(Roster(bot))
+    cog = Roster(bot)
+    await bot.add_cog(cog)
+
+    # 🔥 FORCE REGISTER COMMAND DIRECTLY
+    command = app_commands.Command(
+        name="roster",
+        description="Show the roster for a team role.",
+        callback=cog.roster_command
+    )
+
+    bot.tree.add_command(command)
