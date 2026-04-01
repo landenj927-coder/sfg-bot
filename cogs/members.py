@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-MEMBERS_CHANNEL_ID = 123456789012345678  # replace with your real channel ID
+MEMBERS_CHANNEL_ID = 1488378771563348050  # replace with your real channel ID
 
 
 class Members(commands.Cog):
