@@ -6,7 +6,6 @@ from datetime import datetime
 from utils.config import GUILD_ID
 from utils.helpers import find_text_channel_fuzzy
 
-# ✅ FIXED IMPORT (NO MORE main.py)
 from utils.constants import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, SFG_LOGO_URL
 
 
@@ -31,25 +30,26 @@ class LFP(commands.Cog):
         info: str,
     ):
 
+        # 🔥 FIX: prevent timeout
+        await interaction.response.defer(ephemeral=True)
+
         guild = interaction.guild
         member = interaction.user
 
         if not guild:
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 "Server only command.",
                 ephemeral=True
             )
 
-        # =========================
-        # GET TEAM ROLE
-        # =========================
+        # 🔥 FIX: flexible team role detection
         team_role = next(
-            (r for r in member.roles if r.name in NFL_TEAMS),
+            (r for r in member.roles if any(team in r.name for team in NFL_TEAMS)),
             None
         )
 
         if not team_role:
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 "You must have a team role.",
                 ephemeral=True
             )
@@ -62,7 +62,7 @@ class LFP(commands.Cog):
         channel = find_text_channel_fuzzy(guild, "free agency")
 
         if not channel:
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 "Free Agency channel not found.",
                 ephemeral=True
             )
@@ -105,7 +105,7 @@ class LFP(commands.Cog):
         # =========================
         await channel.send(embed=embed)
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "✅ Free Agency post sent.",
             ephemeral=True
         )
