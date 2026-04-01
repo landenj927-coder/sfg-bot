@@ -3030,12 +3030,6 @@ async def gamereport(
         report = extract_json_object(text)
         report_id = make_report_id(report)
         
-        if await asyncio.to_thread(report_already_processed, report_id):
-            await interaction.edit_original_response(
-                content="❌ This game report was already submitted.",
-                view=None
-            )
-            return
 
         game_id = int(time.time())
         updated = await process_stats_to_sheets(interaction, report, game_id)
@@ -3073,14 +3067,6 @@ async def gamereport(
         detected_line = ""
         if r1 or r2:
             detected_line = f"\n\n*(Detected teams in export: {r1 or 'Unknown'} vs {r2 or 'Unknown'})*"
-
-        await asyncio.to_thread(
-            log_processed_report,
-            report_id,
-            game_id,
-            interaction.user.id,
-            f"updated={updated}"
-        )
 
 
         # ✅ IMPORTANT: edit the ORIGINAL deferred response (no followup)
