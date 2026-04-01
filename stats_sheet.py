@@ -35,11 +35,16 @@ DE_DATA = {}
 # =========================
 # HELPERS
 # =========================
+def _short_team(team):
+    if not team:
+        return team
+    return team.split()[-1]
+
 def _get_player(store, name, team):
     if name not in store:
         store[name] = {
-            "player": name,  # ✅ FIXED
-            "team": team,
+            "player": name,
+            "team": _short_team(team),
             "qbr": 0, "comp": 0, "yds": 0, "td": 0, "int": 0,
             "rec": 0, "fum": 0,
             "defl": 0, "rtng": 0,
@@ -129,17 +134,16 @@ def commit_all_stats():
     update_playerstats_top15()
 
 # =========================
-# PLAYERSTATS TOP 15 (PERFECT LAYOUT)
+# PLAYERSTATS TOP 15
 # =========================
 def update_playerstats_top15():
     sheet = _book().worksheet("PlayerStats")
 
-    # clear ONLY data zones
     sheet.batch_clear([
         "A8:F22",
-        "H8:M22",
+        "G8:L22",   # FIXED SHIFT
         "A26:F40",
-        "H26:M40"
+        "G26:L40"   # FIXED SHIFT
     ])
 
     def top(data, key):
@@ -158,13 +162,13 @@ def update_playerstats_top15():
     if qb_rows:
         sheet.update("A8", qb_rows, value_input_option="USER_ENTERED")
 
-    # WR
+    # WR (SHIFTED LEFT)
     wr_rows = [
         [p["player"], p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
         for _, p in wr_top
     ]
     if wr_rows:
-        sheet.update("H8", wr_rows, value_input_option="USER_ENTERED")
+        sheet.update("G8", wr_rows, value_input_option="USER_ENTERED")
 
     # DB
     db_rows = [
@@ -174,10 +178,10 @@ def update_playerstats_top15():
     if db_rows:
         sheet.update("A26", db_rows, value_input_option="USER_ENTERED")
 
-    # DE
+    # DE (SHIFTED LEFT)
     de_rows = [
         [p["player"], p["team"], p["sack"], p["safe"], p["ff"]]
         for _, p in de_top
     ]
     if de_rows:
-        sheet.update("H26", de_rows, value_input_option="USER_ENTERED")
+        sheet.update("G26", de_rows, value_input_option="USER_ENTERED")
