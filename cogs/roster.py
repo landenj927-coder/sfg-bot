@@ -11,25 +11,16 @@ class Roster(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 👇 THIS LINE FORCES REGISTRATION
-    roster_group = app_commands.Group(name="roster", description="Roster commands")
-
-    @roster_group.command(name="view", description="Show the roster for a team role.")
+    @app_commands.command(name="roster", description="Show the roster for a team role.")
     @app_commands.describe(team_role="Mention the team role you want to view (ex: @Tampa)")
-    async def view(self, interaction: discord.Interaction, team_role: discord.Role):
+    async def roster(self, interaction: discord.Interaction, team_role: discord.Role):
         guild = interaction.guild
 
         if not guild:
-            return await interaction.response.send_message(
-                "Server only command.",
-                ephemeral=True
-            )
+            return await interaction.response.send_message("Server only command.", ephemeral=True)
 
         if team_role.name not in NFL_TEAMS:
-            return await interaction.response.send_message(
-                "Invalid team role.",
-                ephemeral=True
-            )
+            return await interaction.response.send_message("Invalid team role.", ephemeral=True)
 
         team_name = team_role.name
         players = team_role.members
@@ -51,21 +42,16 @@ class Roster(commands.Cog):
         presidents = staff_for_team(president_role)
         gms = staff_for_team(gm_role)
 
-        roster_text = (
-            "\n".join(f"{i}. {m.mention}" for i, m in enumerate(players, start=1))
-            if players else "No players."
-        )
-
-        description = (
-            f"{owner_role.mention if owner_role else 'Franchise Owner'}: {owners}\n"
-            f"{president_role.mention if president_role else 'Team President'}: {presidents}\n"
-            f"{gm_role.mention if gm_role else 'General Manager'}: {gms}\n\n"
-            f"**Roster:**\n{roster_text}"
-        )
+        roster_text = "\n".join(f"{i}. {m.mention}" for i, m in enumerate(players, start=1)) if players else "No players."
 
         embed = discord.Embed(
             title=f"{team_name} Roster",
-            description=description,
+            description=(
+                f"**Franchise Owner:** {owners}\n"
+                f"**Team President:** {presidents}\n"
+                f"**General Manager:** {gms}\n\n"
+                f"**Roster:**\n{roster_text}"
+            ),
             color=color,
             timestamp=datetime.utcnow()
         )
@@ -73,16 +59,8 @@ class Roster(commands.Cog):
         if thumb_url:
             embed.set_thumbnail(url=thumb_url)
 
-        embed.add_field(
-            name="Roster Size",
-            value=f"{len(players)} / {ROSTER_LIMIT}",
-            inline=False
-        )
-
-        embed.set_footer(
-            text="SFG Bot",
-            icon_url=SFG_LOGO_URL
-        )
+        embed.add_field(name="Roster Size", value=f"{len(players)} / {ROSTER_LIMIT}", inline=False)
+        embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
 
         await interaction.response.send_message(embed=embed)
 
