@@ -280,9 +280,6 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load panel.py: {e}")
             traceback.print_exc()
 
-        # =========================
-        # 🔥 NEW ROSTER COG
-        # =========================
         try:
             await self.load_extension("cogs.roster")
             print("✅ Loaded cog: roster.py")
@@ -291,25 +288,28 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load roster.py: {e}")
             traceback.print_exc()
 
-        # =========================
-        # SYNC COMMANDS
-        # =========================
 
-        @bot.event
-        async def on_ready(self):
-            print(f"🚀 Logged in as {bot.user}")
-
-            guild = discord.Object(id=GUILD_ID)
-            self.tree.copy_global_to(guild=guild)
-            synced = await self.tree.sync(guild=guild)
-
-            print(f"🏠 Guild Synced: {len(synced)} commands")
-
+# =========================
+# CREATE BOT INSTANCE
+# =========================
 
 bot = SFGBot()
-# =========================================================
-# STANDINGS HELPERS
-# =========================================================
+
+
+# =========================
+# ON READY (SYNC COMMANDS)
+# =========================
+
+@bot.event
+async def on_ready():
+    print(f"🚀 Logged in as {bot.user}")
+
+    guild = discord.Object(id=GUILD_ID)
+
+    bot.tree.copy_global_to(guild=guild)
+    synced = await bot.tree.sync(guild=guild)
+
+    print(f"🏠 Guild Synced: {len(synced)} commands")
 
 # =========================================================
 # TEAM KEY NORMALIZATION (emoji/case/font insensitive)
