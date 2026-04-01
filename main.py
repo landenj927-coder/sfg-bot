@@ -295,14 +295,14 @@ class SFGBot(commands.Bot):
         # SYNC COMMANDS
         # =========================
 
-        guild = discord.Object(id=GUILD_ID)
+        async def on_ready(self):
+            print(f"🚀 Logged in as {self.user}")
 
-        synced = await self.tree.sync(guild=guild)
+            guild = discord.Object(id=GUILD_ID)
+            self.tree.copy_global_to(guild=guild)
+            synced = await self.tree.sync(guild=guild)
 
-        print(f"🏠 Guild Synced: {len(synced)} commands")
-
-    async def on_ready(self):
-        print(f"🚀 Logged in as {self.user}")
+            print(f"🏠 Guild Synced: {len(synced)} commands")
 
 
 bot = SFGBot()
