@@ -5,31 +5,21 @@ from datetime import datetime
 
 from utils.config import GUILD_ID
 from utils.helpers import find_text_channel_fuzzy
-from utils.constants import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, SFG_LOGO_URL
+from utils.constants import NFL_TEAMS, TEAM_COLORS
 
 
 class LFP(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # =========================
-    # /lfp
-    # =========================
     @app_commands.command(
         name="lfp",
         description="Post a looking for players message"
     )
     @app_commands.guilds(discord.Object(id=GUILD_ID))
-    @app_commands.describe(
-        info="Message players should see"
-    )
-    async def lfp(
-        self,
-        interaction: discord.Interaction,
-        info: str,
-    ):
+    @app_commands.describe(info="Message players should see")
+    async def lfp(self, interaction: discord.Interaction, info: str):
 
-        # 🔥 Prevent timeout
         await interaction.response.defer(ephemeral=True)
 
         guild = interaction.guild
@@ -41,7 +31,7 @@ class LFP(commands.Cog):
                 ephemeral=True
             )
 
-        # 🔥 Flexible team role detection
+        # ✅ FLEXIBLE TEAM DETECTION
         team_role = next(
             (r for r in member.roles if any(team in r.name for team in NFL_TEAMS)),
             None
@@ -55,9 +45,6 @@ class LFP(commands.Cog):
 
         team_name = team_role.name
 
-        # =========================
-        # FIND FREE AGENCY CHANNEL
-        # =========================
         channel = find_text_channel_fuzzy(guild, "free agency")
 
         if not channel:
@@ -66,11 +53,7 @@ class LFP(commands.Cog):
                 ephemeral=True
             )
 
-        # =========================
-        # BUILD EMBED
-        # =========================
         color = TEAM_COLORS.get(team_name, 0x2F3136)
-        thumb = TEAM_THUMBNAILS.get(team_name)
 
         embed = discord.Embed(
             title="Free Agency",
@@ -78,13 +61,6 @@ class LFP(commands.Cog):
             color=color,
             timestamp=datetime.utcnow()
         )
-
-        # 🔥 BULLETPROOF THUMBNAIL
-        try:
-            if isinstance(thumb, str) and thumb.startswith("http"):
-                embed.set_thumbnail(url=thumb)
-        except:
-            pass
 
         embed.add_field(
             name="Information",
@@ -98,18 +74,8 @@ class LFP(commands.Cog):
             inline=False
         )
 
-        # 🔥 BULLETPROOF FOOTER
-        try:
-            if isinstance(SFG_LOGO_URL, str) and SFG_LOGO_URL.startswith("http"):
-                embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
-            else:
-                embed.set_footer(text="SFG Bot")
-        except:
-            embed.set_footer(text="SFG Bot")
+        embed.set_footer(text="SFG Bot")
 
-        # =========================
-        # SEND
-        # =========================
         await channel.send(embed=embed)
 
         await interaction.followup.send(
@@ -118,8 +84,5 @@ class LFP(commands.Cog):
         )
 
 
-# =========================
-# SETUP
-# =========================
 async def setup(bot):
     await bot.add_cog(LFP(bot))
