@@ -249,6 +249,14 @@ class SFGBot(commands.Bot):
             traceback.print_exc()
 
         try:
+            await self.load_extension("cogs.lfp")
+            print("✅ Loaded cog: lfp.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load lfp.py: {e}")
+            traceback.print_exc()
+            
+        try:
             await self.load_extension("cogs.gamereport")
             print("✅ Loaded cog: gamereport.py")
         except Exception as e:
@@ -933,91 +941,6 @@ async def on_member_remove(member: discord.Member):
         await ch.send(msg)
     except discord.Forbidden:
         pass
-
-# =========================
-# /lfp
-# =========================
-@bot.tree.command(
-    name="lfp",
-    description="Post a looking for players message"
-)
-@app_commands.describe(
-    info="Message players should see"
-)
-async def lfp(
-    interaction: discord.Interaction,
-    info: str,
-):
-
-    guild = interaction.guild
-    member = interaction.user
-
-    if not guild:
-        return await interaction.response.send_message(
-            "Server only command.",
-            ephemeral=True
-        )
-
-    team_role = next(
-        (r for r in member.roles if r.name in NFL_TEAMS),
-        None
-    )
-
-    if not team_role:
-        return await interaction.response.send_message(
-            "You must have a team role.",
-            ephemeral=True
-        )
-
-    team_name = team_role.name
-
-    channel = find_text_channel_fuzzy(
-        guild,
-        "Free Agency"
-    )
-
-    if not channel:
-        return await interaction.response.send_message(
-            "Free Agency channel not found.",
-            ephemeral=True
-        )
-
-    color = TEAM_COLORS.get(team_name, 0x2F3136)
-    thumb = TEAM_THUMBNAILS.get(team_name)
-
-    embed = discord.Embed(
-        title="Free-Agency",
-        description=f"**Looking for Players**\n\n{team_role.mention} are looking for players!",
-        color=color,
-        timestamp=datetime.utcnow()
-    )
-
-    if thumb:
-        embed.set_thumbnail(url=thumb)
-
-    embed.add_field(
-        name="Information –",
-        value=f"```\n{info}\n```",
-        inline=False
-    )
-
-    embed.add_field(
-        name="Coach –",
-        value=member.mention,
-        inline=False
-    )
-
-    embed.set_footer(
-        text="SFG Bot",
-        icon_url=SFG_LOGO_URL
-    )
-
-    await channel.send(embed=embed)
-
-    await interaction.response.send_message(
-        "Free Agency post sent.",
-        ephemeral=True
-    )
 
 # =========================
 # Applications (FINAL)
