@@ -143,7 +143,9 @@ class GameReport(commands.Cog):
             # =========================
             # POST TO SCORES
             # =========================
-            scores_channel = discord.utils.get(guild.text_channels, name="scores")
+            SCORES_CHANNEL_ID = 1488381961301917807  # put your real ID
+
+            scores_channel = guild.get_channel(SCORES_CHANNEL_ID)
 
             winner = team1_name if score1 > score2 else team2_name
 
@@ -196,3 +198,5 @@ class GameReport(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(GameReport(bot))
+
+commit_all_stats()

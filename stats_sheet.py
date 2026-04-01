@@ -4,7 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # =========================
-# GOOGLE SETUP
+# GOOGLE CONFIG
 # =========================
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -25,7 +25,7 @@ def _client():
     creds_json = os.getenv("GOOGLE_CREDENTIALS")
 
     if not creds_json:
-        raise Exception("GOOGLE_CREDENTIALS not set in Railway.")
+        raise Exception("GOOGLE_CREDENTIALS not set in Railway")
 
     creds_dict = json.loads(creds_json)
 
@@ -40,7 +40,7 @@ def _book():
 
 
 # =========================
-# STAT STORAGE (IN MEMORY)
+# IN-MEMORY STORAGE
 # =========================
 QB_DATA = {}
 WR_DATA = {}
@@ -49,10 +49,10 @@ DE_DATA = {}
 
 
 # =========================
-# ADD / MERGE STATS
+# APPEND / MERGE FUNCTIONS
 # =========================
 def append_qb_statline(name, team, qb):
-    player = QB_DATA.setdefault(name, {
+    p = QB_DATA.setdefault(name, {
         "team": team,
         "qbr": 0,
         "comp": 0,
@@ -61,15 +61,15 @@ def append_qb_statline(name, team, qb):
         "int": 0
     })
 
-    player["qbr"] = float(qb.get("rtng", 0) or 0)
-    player["comp"] += int(qb.get("comp", 0) or 0)
-    player["yds"] += int(qb.get("yds", 0) or 0)
-    player["td"] += int(qb.get("td", 0) or 0)
-    player["int"] += int(qb.get("int", 0) or 0)
+    p["qbr"] = float(qb.get("rtng", 0) or 0)
+    p["comp"] += int(qb.get("comp", 0) or 0)
+    p["yds"] += int(qb.get("yds", 0) or 0)
+    p["td"] += int(qb.get("td", 0) or 0)
+    p["int"] += int(qb.get("int", 0) or 0)
 
 
 def append_wr_statline(name, team, wr):
-    player = WR_DATA.setdefault(name, {
+    p = WR_DATA.setdefault(name, {
         "team": team,
         "rec": 0,
         "yds": 0,
@@ -77,92 +77,93 @@ def append_wr_statline(name, team, wr):
         "fum": 0
     })
 
-    player["rec"] += int(wr.get("catch", 0) or 0)
-    player["yds"] += int(wr.get("yds", 0) or 0)
-    player["td"] += int(wr.get("td", 0) or 0)
-    player["fum"] += int(wr.get("fum", 0) or 0)
+    p["rec"] += int(wr.get("catch", 0) or 0)
+    p["yds"] += int(wr.get("yds", 0) or 0)
+    p["td"] += int(wr.get("td", 0) or 0)
+    p["fum"] += int(wr.get("fum", 0) or 0)
 
 
 def append_db_statline(name, team, db):
-    player = DB_DATA.setdefault(name, {
+    p = DB_DATA.setdefault(name, {
         "team": team,
         "defl": 0,
         "int": 0,
         "rtng": 0
     })
 
-    player["defl"] += int(db.get("defl", 0) or 0)
-    player["int"] += int(db.get("int", 0) or 0)
-    player["rtng"] += float(db.get("rtng", 0) or 0)
+    p["defl"] += int(db.get("defl", 0) or 0)
+    p["int"] += int(db.get("int", 0) or 0)
+    p["rtng"] += float(db.get("rtng", 0) or 0)
 
 
 def append_de_statline(name, team, de):
-    player = DE_DATA.setdefault(name, {
+    p = DE_DATA.setdefault(name, {
         "team": team,
         "sack": 0,
         "safe": 0,
         "ff": 0
     })
 
-    player["sack"] += int(de.get("sack", 0) or 0)
-    player["safe"] += int(de.get("safe", 0) or 0)
-    player["ff"] += int(de.get("ffum", 0) or 0)
+    p["sack"] += int(de.get("sack", 0) or 0)
+    p["safe"] += int(de.get("safe", 0) or 0)
+    p["ff"] += int(de.get("ffum", 0) or 0)
 
 
 # =========================
-# BULK WRITE FUNCTION
+# WRITE FUNCTION (FIXED)
 # =========================
-def _write_sheet(sheet_name, headers, rows):
+def _write_sheet(sheet_name, start_row, rows):
     sheet = _book().worksheet(sheet_name)
 
-    sheet.clear()
+    # clear only data area
+    sheet.batch_clear([f"A{start_row}:Z100"])
 
-    sheet.update("A1", [headers] + rows)
+    if not rows:
+        return
+
+    sheet.update(f"A{start_row}", rows)
 
 
 # =========================
-# PUSH ALL DATA (FAST)
+# COMMIT ALL STATS
 # =========================
 def commit_all_stats():
-    # QB
     qb_rows = [
         [name, p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
         for name, p in QB_DATA.items()
     ]
 
-    # WR
     wr_rows = [
         [name, p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
         for name, p in WR_DATA.items()
     ]
 
-    # DB
     db_rows = [
         [name, p["team"], p["defl"], p["int"], p["rtng"]]
         for name, p in DB_DATA.items()
     ]
 
-    # DE
     de_rows = [
         [name, p["team"], p["sack"], p["safe"], p["ff"]]
         for name, p in DE_DATA.items()
     ]
 
-    _write_sheet("QB", ["Player", "Team", "QBR", "Comp", "Yds", "TD", "INT"], qb_rows)
-    _write_sheet("WR", ["Player", "Team", "REC", "Yds", "TD", "FUM"], wr_rows)
-    _write_sheet("DB", ["Player", "Team", "Defl", "INT", "RTNG"], db_rows)
-    _write_sheet("DE", ["Player", "Team", "Sack", "Safe", "FF"], de_rows)
+    # 🔥 WRITE TO CORRECT POSITIONS
+    _write_sheet("QB", 8, qb_rows)
+    _write_sheet("WR", 8, wr_rows)
+    _write_sheet("DB", 15, db_rows)
+    _write_sheet("DE", 8, de_rows)
 
     update_playerstats_top15()
 
 
 # =========================
-# LEADERBOARD SYSTEM
+# LEADERBOARD
 # =========================
 def update_playerstats_top15():
     sheet = _book().worksheet("PlayerStats")
 
-    sheet.clear()
+    sheet.batch_clear(["A5:Z100"])
 
     def top(data, key):
         return sorted(data.items(), key=lambda x: x[1][key], reverse=True)[:15]
@@ -172,23 +173,21 @@ def update_playerstats_top15():
     db_top = top(DB_DATA, "int")
     de_top = top(DE_DATA, "sack")
 
-    rows = [["QB LEADERS"]]
-    for name, p in qb_top:
-        rows.append([name, p["team"], p["yds"], p["td"]])
+    row = 5
 
-    rows.append([])
-    rows.append(["WR LEADERS"])
-    for name, p in wr_top:
-        rows.append([name, p["team"], p["yds"], p["td"]])
+    def write_section(title, players):
+        nonlocal row
 
-    rows.append([])
-    rows.append(["DB LEADERS"])
-    for name, p in db_top:
-        rows.append([name, p["team"], p["int"]])
+        sheet.update(f"A{row}", [[title]])
+        row += 1
 
-    rows.append([])
-    rows.append(["DE LEADERS"])
-    for name, p in de_top:
-        rows.append([name, p["team"], p["sack"]])
+        for name, p in players:
+            sheet.update(f"A{row}", [[name, p["team"]]])
+            row += 1
 
-    sheet.update("A1", rows)
+        row += 2
+
+    write_section("QB LEADERS", qb_top)
+    write_section("WR LEADERS", wr_top)
+    write_section("DB LEADERS", db_top)
+    write_section("DE LEADERS", de_top)
