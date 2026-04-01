@@ -272,15 +272,23 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load gamereport.py: {e}")
             traceback.print_exc()
 
-        # =========================
-        # 🔥 NEW PANEL COG
-        # =========================
         try:
             await self.load_extension("cogs.panel")
             print("✅ Loaded cog: panel.py")
         except Exception as e:
             import traceback
             print(f"❌ Failed to load panel.py: {e}")
+            traceback.print_exc()
+
+        # =========================
+        # 🔥 NEW ROSTER COG
+        # =========================
+        try:
+            await self.load_extension("cogs.roster")
+            print("✅ Loaded cog: roster.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load roster.py: {e}")
             traceback.print_exc()
 
         # =========================
@@ -1874,62 +1882,6 @@ async def stream(
         f"✅ Stream posted in {streams_ch.mention}.",
         ephemeral=True
     )
-
-
-# =========================
-# /roster
-# =========================
-@bot.tree.command(name="roster", description="Show the roster for a team role.")
-@app_commands.describe(team_role="Mention the team role you want to view (ex: @Tampa)")
-async def roster(interaction: discord.Interaction, team_role: discord.Role):
-    guild = interaction.guild
-
-    if team_role.name not in NFL_TEAMS:
-        return await interaction.response.send_message("Invalid team role.", ephemeral=True)
-
-    team_name = team_role.name
-    players = team_role.members
-
-    color = TEAM_COLORS.get(team_name, 0x2F3136)
-    thumb_url = TEAM_THUMBNAILS.get(team_name)
-
-    owner_role = discord.utils.get(guild.roles, name="Franchise Owner")
-    president_role = discord.utils.get(guild.roles, name="Team President")
-    gm_role = discord.utils.get(guild.roles, name="General Manager")
-
-    def staff_for_team(role: Optional[discord.Role]) -> str:
-        if not role:
-            return "N/A"
-        matched = [m.mention for m in role.members if team_role in m.roles]
-        return ", ".join(matched) if matched else "N/A"
-
-    owners = staff_for_team(owner_role)
-    presidents = staff_for_team(president_role)
-    gms = staff_for_team(gm_role)
-
-    roster_text = "\n".join(f"{i}. {m.mention}" for i, m in enumerate(players, start=1)) if players else "No players."
-
-    description = (
-        f"{owner_role.mention if owner_role else 'Franchise Owner'}: {owners}\n"
-        f"{president_role.mention if president_role else 'Team President'}: {presidents}\n"
-        f"{gm_role.mention if gm_role else 'General Manager'}: {gms}\n\n"
-        f"**Roster:**\n{roster_text}"
-    )
-
-    embed = discord.Embed(
-        title=f"{team_name} Roster",
-        description=description,
-        color=color,
-        timestamp=datetime.utcnow()
-    )
-
-    if thumb_url:
-        embed.set_thumbnail(url=thumb_url)
-
-    embed.add_field(name="Roster Size", value=f"{len(players)} / {ROSTER_LIMIT}", inline=False)
-    embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
-
-    await interaction.response.send_message(embed=embed, ephemeral=False)
 
 # =========================
 # /release
