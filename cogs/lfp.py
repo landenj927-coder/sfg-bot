@@ -5,7 +5,6 @@ from datetime import datetime
 
 from utils.config import GUILD_ID
 from utils.helpers import find_text_channel_fuzzy
-
 from utils.constants import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, SFG_LOGO_URL
 
 
@@ -30,7 +29,7 @@ class LFP(commands.Cog):
         info: str,
     ):
 
-        # 🔥 FIX: prevent timeout
+        # 🔥 Prevent timeout
         await interaction.response.defer(ephemeral=True)
 
         guild = interaction.guild
@@ -42,7 +41,7 @@ class LFP(commands.Cog):
                 ephemeral=True
             )
 
-        # 🔥 FIX: flexible team role detection
+        # 🔥 Flexible team role detection
         team_role = next(
             (r for r in member.roles if any(team in r.name for team in NFL_TEAMS)),
             None
@@ -80,7 +79,8 @@ class LFP(commands.Cog):
             timestamp=datetime.utcnow()
         )
 
-        if thumb:
+        # ✅ SAFE THUMBNAIL (prevents crash)
+        if thumb and isinstance(thumb, str) and thumb.startswith("http"):
             embed.set_thumbnail(url=thumb)
 
         embed.add_field(
@@ -95,10 +95,14 @@ class LFP(commands.Cog):
             inline=False
         )
 
-        embed.set_footer(
-            text="SFG Bot",
-            icon_url=SFG_LOGO_URL
-        )
+        # ✅ SAFE FOOTER (prevents crash)
+        if isinstance(SFG_LOGO_URL, str) and SFG_LOGO_URL.startswith("http"):
+            embed.set_footer(
+                text="SFG Bot",
+                icon_url=SFG_LOGO_URL
+            )
+        else:
+            embed.set_footer(text="SFG Bot")
 
         # =========================
         # SEND
