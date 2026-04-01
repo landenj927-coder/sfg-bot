@@ -90,10 +90,6 @@ class Roster(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    # 🔥 FORCE REGISTER COMMAND (FIXES YOUR ISSUE)
-    def cog_load(self):
-        self.bot.tree.add_command(self.roster)
-
 
 # =========================
 # REQUIRED FOR COG LOADING
