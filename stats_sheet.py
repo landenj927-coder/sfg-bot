@@ -38,6 +38,7 @@ DE_DATA = {}
 def _get_player(store, name, team):
     if name not in store:
         store[name] = {
+            "player": name,  # ✅ FIXED
             "team": team,
             "qbr": 0, "comp": 0, "yds": 0, "td": 0, "int": 0,
             "rec": 0, "fum": 0,
@@ -95,35 +96,35 @@ def commit_all_stats():
 
     # QB
     qb_rows = [
-        [n, p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
-        for n, p in QB_DATA.items()
+        [p["player"], p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
+        for p in QB_DATA.values()
     ]
     if qb_rows:
-        qb_sheet.update("A8", qb_rows)
+        qb_sheet.update("A8", qb_rows, value_input_option="USER_ENTERED")
 
     # WR
     wr_rows = [
-        [n, p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
-        for n, p in WR_DATA.items()
+        [p["player"], p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
+        for p in WR_DATA.values()
     ]
     if wr_rows:
-        wr_sheet.update("A8", wr_rows)
+        wr_sheet.update("A8", wr_rows, value_input_option="USER_ENTERED")
 
     # DB
     db_rows = [
-        [n, p["team"], p["defl"], p["int"], p["rtng"]]
-        for n, p in DB_DATA.items()
+        [p["player"], p["team"], p["defl"], p["int"], p["rtng"]]
+        for p in DB_DATA.values()
     ]
     if db_rows:
-        db_sheet.update("A8", db_rows)
+        db_sheet.update("A8", db_rows, value_input_option="USER_ENTERED")
 
     # DE
     de_rows = [
-        [n, p["team"], p["sack"], p["safe"], p["ff"]]
-        for n, p in DE_DATA.items()
+        [p["player"], p["team"], p["sack"], p["safe"], p["ff"]]
+        for p in DE_DATA.values()
     ]
     if de_rows:
-        de_sheet.update("A8", de_rows)
+        de_sheet.update("A8", de_rows, value_input_option="USER_ENTERED")
 
     update_playerstats_top15()
 
@@ -135,10 +136,10 @@ def update_playerstats_top15():
 
     # clear ONLY data zones
     sheet.batch_clear([
-        "A8:F22",   # QB
-        "H8:M22",   # WR
-        "A26:F40",  # DB
-        "H26:M40"   # DE
+        "A8:F22",
+        "H8:M22",
+        "A26:F40",
+        "H26:M40"
     ])
 
     def top(data, key):
@@ -149,34 +150,34 @@ def update_playerstats_top15():
     db_top = top(DB_DATA, "int")
     de_top = top(DE_DATA, "sack")
 
-    # QB (LEFT TOP)
+    # QB
     qb_rows = [
-        [n, p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
-        for n, p in qb_top
+        [p["player"], p["team"], p["qbr"], p["comp"], p["yds"], p["td"], p["int"]]
+        for _, p in qb_top
     ]
     if qb_rows:
-        sheet.update("A8", qb_rows)
+        sheet.update("A8", qb_rows, value_input_option="USER_ENTERED")
 
-    # WR (RIGHT TOP)
+    # WR
     wr_rows = [
-        [n, p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
-        for n, p in wr_top
+        [p["player"], p["team"], p["rec"], p["yds"], p["td"], p["fum"]]
+        for _, p in wr_top
     ]
     if wr_rows:
-        sheet.update("H8", wr_rows)
+        sheet.update("H8", wr_rows, value_input_option="USER_ENTERED")
 
-    # DB (LEFT BOTTOM)
+    # DB
     db_rows = [
-        [n, p["team"], p["defl"], p["int"], p["rtng"]]
-        for n, p in db_top
+        [p["player"], p["team"], p["defl"], p["int"], p["rtng"]]
+        for _, p in db_top
     ]
     if db_rows:
-        sheet.update("A26", db_rows)
+        sheet.update("A26", db_rows, value_input_option="USER_ENTERED")
 
-    # DE (RIGHT BOTTOM)
+    # DE
     de_rows = [
-        [n, p["team"], p["sack"], p["safe"], p["ff"]]
-        for n, p in de_top
+        [p["player"], p["team"], p["sack"], p["safe"], p["ff"]]
+        for _, p in de_top
     ]
     if de_rows:
-        sheet.update("H26", de_rows)
+        sheet.update("H26", de_rows, value_input_option="USER_ENTERED")
