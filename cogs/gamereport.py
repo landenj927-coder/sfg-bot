@@ -127,7 +127,7 @@ class GameReport(commands.Cog):
                         qb.get("comp", 0),
                         qb.get("yds", 0),
                         qb.get("td", 0),
-                        qb.get("int", 0)
+                        qb.get("int", qb.get("ints", 0))
                     )
 
                 # WR
