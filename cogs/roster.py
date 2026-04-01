@@ -9,8 +9,8 @@ from utils.constants import NFL_TEAMS, TEAM_COLORS, TEAM_THUMBNAILS, ROSTER_LIMI
 class Roster(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.tree.add_command(self.roster)
 
+        
     # =========================
     # /roster
     # =========================
