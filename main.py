@@ -235,6 +235,14 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load offer.py: {e}")
 
         try:
+            await self.load_extension("cogs.team")
+            print("✅ Loaded cog: team.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load team.py: {e}")
+            traceback.print_exc()
+
+        try:
             await self.load_extension("cogs.rulebook")
             print("✅ Loaded cog: rulebook.py")
         except Exception as e:
