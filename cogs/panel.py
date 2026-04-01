@@ -123,3 +123,9 @@ class Panel(commands.Cog):
         )
 
         await interaction.channel.send(embed=embed, view=view)
+
+# =========================
+# SETUP (REQUIRED)
+# =========================
+async def setup(bot):
+    await bot.add_cog(Panel(bot))
