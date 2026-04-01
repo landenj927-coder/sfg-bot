@@ -11,7 +11,7 @@ from stats_sheet import (
     append_wr_statline,
     append_db_statline,
     append_de_statline,
-    update_playerstats_top15,
+    commit_all_stats,
 )
 
 
@@ -74,7 +74,7 @@ class GameReport(commands.Cog):
             )
 
         # =========================
-        # JSON PARSE (FIXED)
+        # JSON PARSE (SAFE)
         # =========================
         try:
             raw = await json_file.read()
@@ -82,10 +82,9 @@ class GameReport(commands.Cog):
 
             start = text.find("{")
             if start == -1:
-                raise ValueError("No JSON object found.")
+                raise ValueError("No JSON found.")
 
-            clean_json = text[start:]
-            game_data = json.loads(clean_json)
+            game_data = json.loads(text[start:])
 
         except Exception as e:
             return await interaction.followup.send(
@@ -101,11 +100,10 @@ class GameReport(commands.Cog):
             await post_or_update_standings(guild)
 
             # =========================
-            # PROCESS PLAYER STATS
+            # PROCESS STATS (IN MEMORY)
             # =========================
-            processed_players = set()
+            for player in game_data.values():
 
-            for player in game_data.values():  # 🔥 FIXED LOOP
                 qb = player.get("qb", {})
                 wr = player.get("wr", {})
                 db = player.get("db", {})
@@ -121,39 +119,54 @@ class GameReport(commands.Cog):
 
                 team_name = other.get("team", "Free Agent")
 
-                if name in processed_players:
-                    continue
-                processed_players.add(name)
-
+                # QB
                 if qb.get("yds", 0) > 0:
                     append_qb_statline(name, team_name, qb)
 
+                # WR
                 if wr.get("yds", 0) > 0:
                     append_wr_statline(name, team_name, wr)
 
+                # DB
                 if db.get("int", 0) > 0 or db.get("defl", 0) > 0:
                     append_db_statline(name, team_name, db)
 
+                # DE
                 if de.get("sack", 0) > 0:
                     append_de_statline(name, team_name, de)
 
             # =========================
-            # UPDATE LEADERBOARD
+            # 🔥 SINGLE WRITE TO SHEETS
             # =========================
-            update_playerstats_top15()
+            commit_all_stats()
 
             # =========================
-            # POST TO SCORES CHANNEL
+            # POST TO SCORES
             # =========================
             scores_channel = discord.utils.get(guild.text_channels, name="scores")
 
+            winner = team1_name if score1 > score2 else team2_name
+
             embed = discord.Embed(
                 title="🏈 Matchup Report",
-                description=f"{team1.mention} **{score1}** 🏆\n{team2.mention} **{score2}**",
                 color=discord.Color.green()
             )
 
-            embed.add_field(name="Status", value="✅ FINALIZED", inline=False)
+            embed.add_field(
+                name="Game Result",
+                value=(
+                    f"{team1.mention} **{score1}**\n"
+                    f"{team2.mention} **{score2}**\n\n"
+                    f"🏆 Winner: **{winner}**"
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="Status",
+                value="✅ FINALIZED",
+                inline=False
+            )
 
             embed.set_footer(
                 text=f"Submitted by {interaction.user.display_name}"
