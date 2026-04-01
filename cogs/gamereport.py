@@ -124,10 +124,11 @@ class GameReport(commands.Cog):
                     append_qb_statline(
                         name,
                         team_name,
+                        qb.get("qbr", qb.get("rtng", 0)),
                         qb.get("comp", 0),
                         qb.get("yds", 0),
                         qb.get("td", 0),
-                        qb.get("ints") if qb.get("ints") is not None else qb.get("int", 0)
+                        qb.get("int", qb.get("ints", 0))
                     )
 
                 # WR
