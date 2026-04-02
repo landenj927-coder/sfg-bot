@@ -295,6 +295,14 @@ class SFGBot(commands.Bot):
             import traceback
             print(f"❌ Failed to load roster.py: {e}")
             traceback.print_exc()
+        
+        try:
+            await self.load_extension("cogs.applications")
+            print("✅ Loaded cog: applications.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load applications.py: {e}")
+            traceback.print_exc()
 
 
 # =========================
@@ -1252,7 +1260,7 @@ async def start_referee_application(bot: commands.Bot, guild: discord.Guild, app
 
 class ApplicationBranchView(discord.ui.View):
     """Shown on the PUBLIC panel message. Never changes."""
-    def __init__(self, guild: discord.Guild):
+    def __init__(self, guild: discord.Guild | None = None):
         super().__init__(timeout=None)
         self.guild = guild
         self.add_item(ApplicationBranchSelect())
@@ -1385,99 +1393,6 @@ class ApplicationRoleSelect(discord.ui.Select):
             return await _dm_result(ok, "Stat Analyst")
 
         return await interaction.response.edit_message(content=f"✅ You selected **{choice}**.", view=None)
-
-# =========================================================
-# /applications command (single panel only)
-# =========================================================
-
-@bot.tree.command(name="applications", description="Post the SFG application panel.")
-async def applications(interaction: discord.Interaction):
-
-    await interaction.response.defer(ephemeral=True)  # ✅ fixes Unknown interaction
-
-    guild = interaction.guild
-    if not guild:
-        return await interaction.followup.send(
-            "Server-only command.",
-            ephemeral=True
-        )
-
-    app_channel = guild.get_channel(APPLICATIONS_CHANNEL_ID)
-
-    if not app_channel:
-        return await interaction.followup.send(
-        "❌ Applications channel not found.",
-        ephemeral=True
-    )
-
-    # ✅ Remove old panels posted by the bot (keep newest one)
-    try:
-        bot_user = interaction.client.user
-        if bot_user:
-            panels = []
-            async for msg in app_channel.history(limit=100):
-                if msg.author.id != bot_user.id:
-                    continue
-                if not msg.embeds:
-                    continue
-                if (msg.embeds[0].title or "") == APPLICATION_PANEL_TITLE:
-                    panels.append(msg)
-
-            for old_panel in panels[1:]:
-                await old_panel.delete()
-
-    except Exception as e:
-        print("Panel cleanup error:", repr(e))
-
-    def role_mention(name: str) -> str:
-        r = discord.utils.get(guild.roles, name=name)
-        return r.mention if r else f"@{name}"
-
-    embed = discord.Embed(
-        title=APPLICATION_PANEL_TITLE,
-        color=0x3498DB
-    )
-
-    embed.add_field(
-        name="Information",
-        value=(
-            "On this panel you can find numerous amounts of different applications "
-            "that help SFG run. If you'd like to be a part of our team, decide which "
-            "branch you'd like to apply to and read the questions carefully."
-        ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="Applications",
-        value=(
-            f"{role_mention('Justice')}\n"
-            "• Investigation Staff\n"
-            "• Referee Staff\n\n"
-            f"{role_mention('Community')}\n"
-            "• Media Analyst\n"
-            "• Media Owner\n"
-            "• Streamer\n"
-            "• Host\n\n"
-            f"{role_mention('Franchise')}\n"
-            "• Franchise Owner\n\n"
-            f"{role_mention('Awards Committee')}\n"
-            "• Stat Analyst"
-        ),
-        inline=False
-    )
-
-    embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
-
-    await app_channel.send(
-        embed=embed,
-        view=ApplicationBranchView(guild)
-    )
-
-    await interaction.followup.send(
-        f"✅ Application panel posted in {app_channel.mention}.",
-        ephemeral=True
-    )
 # =========================
 # /ruling (Admin Punishments)
 # =========================

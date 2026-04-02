@@ -95,6 +95,95 @@ class OfferView(discord.ui.View):
 
         return embed
 
+
+# =========================================================
+# APPLICATION SYSTEM
+# =========================================================
+
+APPLICATION_BRANCHES = {
+    "Justice": {
+        "options": ["Investigation Staff", "Referee Staff"]
+    },
+    "Community": {
+        "options": ["Media Analyst", "Media Owner", "Streamer", "Host"]
+    },
+    "Franchise": {
+        "options": ["Franchise Owner"]
+    },
+    "Awards Committee": {
+        "options": ["Stat Analyst"]
+    }
+}
+
+
+class ApplicationBranchView(discord.ui.View):
+    def __init__(self, guild: discord.Guild | None = None):
+        super().__init__(timeout=None)
+        self.guild = guild
+        self.add_item(ApplicationBranchSelect())
+
+
+class ApplicationBranchSelect(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label=name, value=name)
+            for name in APPLICATION_BRANCHES.keys()
+        ]
+
+        super().__init__(
+            placeholder="Select an application branch",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        branch = self.values[0]
+        data = APPLICATION_BRANCHES[branch]
+
+        await interaction.response.send_message(
+            content=f"**{branch} Applications**\nSelect what you want to apply for:",
+            ephemeral=True,
+            view=ApplicationRoleView(branch, data),
+        )
+
+
+class ApplicationRoleView(discord.ui.View):
+    def __init__(self, branch_name: str, data: dict):
+        super().__init__(timeout=300)
+        self.add_item(ApplicationRoleSelect(branch_name, data))
+
+    @discord.ui.button(label="⬅ Back", style=discord.ButtonStyle.secondary)
+    async def back_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.edit_message(
+            content="Select an application branch:",
+            view=ApplicationBranchView(),
+        )
+
+
+class ApplicationRoleSelect(discord.ui.Select):
+    def __init__(self, branch_name: str, data: dict):
+        options = [
+            discord.SelectOption(label=opt, value=opt)
+            for opt in data["options"]
+        ]
+
+        super().__init__(
+            placeholder=f"{branch_name} Applications",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        choice = self.values[0]
+
+        # 🔥 TEMP RESPONSE (you can replace later with full application system)
+        await interaction.response.edit_message(
+            content=f"✅ You selected **{choice}**.\n(Application system can go here)",
+            view=None
+        )
+
     # =========================
     # ACCEPT
     # =========================
