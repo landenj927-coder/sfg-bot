@@ -74,3 +74,23 @@ TEAM_COLORS = {
 TEAM_THUMBNAILS = {}  # paste yours here if needed
 
 TEAM_EMOJI_NAME = {}  # paste yours here if needed
+
+GAMETIME_TIME_CHOICES = [
+    app_commands.Choice(name="7:00 PM", value="7:00 PM"),
+    app_commands.Choice(name="7:15 PM", value="7:15 PM"),
+    app_commands.Choice(name="7:30 PM", value="7:30 PM"),
+    app_commands.Choice(name="7:45 PM", value="7:45 PM"),
+    app_commands.Choice(name="8:00 PM", value="8:00 PM"),
+    app_commands.Choice(name="8:15 PM", value="8:15 PM"),
+    app_commands.Choice(name="8:30 PM", value="8:30 PM"),
+    app_commands.Choice(name="8:45 PM", value="8:45 PM"),
+    app_commands.Choice(name="9:00 PM", value="9:00 PM"),
+    app_commands.Choice(name="9:15 PM", value="9:15 PM"),
+    app_commands.Choice(name="9:30 PM", value="9:30 PM"),
+    app_commands.Choice(name="9:45 PM", value="9:45 PM"),
+    app_commands.Choice(name="10:00 PM", value="10:00 PM"),
+    app_commands.Choice(name="10:15 PM", value="10:15 PM"),
+    app_commands.Choice(name="10:30 PM", value="10:30 PM"),
+    app_commands.Choice(name="10:45 PM", value="10:45 PM"),
+    app_commands.Choice(name="11:00 PM", value="11:00 PM"),
+]
