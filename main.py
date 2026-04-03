@@ -328,6 +328,14 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load folist.py: {e}")
             traceback.print_exc()
 
+        try:
+            await self.load_extension("cogs.stream")
+            print("✅ Loaded cog: stream.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load stream.py: {e}")
+            traceback.print_exc()
+
 # =========================
 # CREATE BOT INSTANCE
 # =========================
@@ -2402,119 +2410,6 @@ class GroupSelect(discord.ui.Select):
                 your_team=self.parent_view.your_team,
             ),
         )
-# =========================
-# /gamereport (FO/TP ONLY)
-# =========================
-
-@bot.tree.command(
-    name="gamereport",
-    description="Submit Football Fusion game report (FO/TP only)."
-)
-@app_commands.describe(
-    json_file="Football Fusion export (.txt or .json)",
-    your_score="Your team's final score",
-    qb_stats="QB stats image",
-    wr_stats="WR stats image",
-    db_stats="DB stats image",
-    de_stats="DE stats image",
-)
-async def gamereport(
-    interaction: discord.Interaction,
-    json_file: discord.Attachment,
-    your_score: int,
-    qb_stats: discord.Attachment,
-    wr_stats: discord.Attachment,
-    db_stats: discord.Attachment,
-    de_stats: discord.Attachment,
-):
-    # ── Permission check ─────────────────────────────
-    if not can_submit_gamereport(interaction.guild, interaction.user):
-        return await interaction.response.send_message(
-            "Only **Franchise Owners** and **Team Presidents** may submit game reports.",
-            ephemeral=True
-        )
-
-    # ── Defer (creates the ONE ephemeral message we will edit) ──
-    try:
-        await interaction.response.defer(ephemeral=True)
-    except (discord.NotFound, discord.InteractionResponded):
-        return
-
-    try:
-        raw = await json_file.read()
-        text = raw.decode("utf-8", errors="replace")
-
-        prefix_pair = extract_score_from_prefix(text)
-        report = extract_json_object(text)
-        report_id = make_report_id(report)
-        
-
-        game_id = int(time.time())
-        updated = await process_stats_to_sheets(interaction, report, game_id)
-
-        # ── Determine opponent score ──────────────────
-        opp_score = 0
-        if prefix_pair:
-            a, b = prefix_pair
-            if your_score == a:
-                opp_score = b
-            elif your_score == b:
-                opp_score = a
-            else:
-                # fallback: still use detected "b" but log mismatch
-                opp_score = b
-                await send_logs(
-                    interaction.guild,
-                    f"⚠ **Score mismatch**\nTyped your_score={your_score}\nPrefix score={a}-{b}"
-                )
-        else:
-            await send_logs(
-                interaction.guild,
-                "⚠ **Score auto-detect failed**: No 'XX - YY' score prefix found before JSON."
-            )
-
-        images = {"QB": qb_stats, "WR": wr_stats, "DB": db_stats, "DE": de_stats}
-
-        # ── Best-effort detect submitter team (for removing it from opponent list) ──
-        your_team: str | None = None
-        if isinstance(interaction.user, discord.Member):
-            your_team = _detect_user_team_from_roles(interaction.guild, interaction.user)
-
-        # (Optional) show what the export seems to contain (does NOT update standings here)
-        r1, r2 = _detect_teams_from_report(report)
-        detected_line = ""
-        if r1 or r2:
-            detected_line = f"\n\n*(Detected teams in export: {r1 or 'Unknown'} vs {r2 or 'Unknown'})*"
-
-
-        # ✅ IMPORTANT: edit the ORIGINAL deferred response (no followup)
-        # Standings are updated later (in TeamSelect.callback) once the exact opponent team is chosen.
-        await interaction.edit_original_response(
-            content=(
-                f"✅ Game report processed.\n"
-                f"Wrote stat rows for **{updated}** matched player(s).\n"
-                f"Detected score: **{your_score}-{opp_score}**\n\n"
-                "Pick the opponent group:"
-                + detected_line
-            ),
-            view=GroupPickView(
-                interaction.user,
-                images,
-                your_score,
-                opp_score,
-                your_team=your_team,
-            ),
-        )
-
-    except Exception as e:
-        await interaction.edit_original_response(
-            content=(
-                "❌ Game report failed.\n"
-                f"```{type(e).__name__}: {e}```"
-            ),
-            view=None
-        )
-
 # =========================
 # RUN
 # =========================
