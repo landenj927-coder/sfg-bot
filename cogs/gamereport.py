@@ -6,7 +6,7 @@ import json
 from utils.config import GUILD_ID
 from utils.standings import update_game_result, post_or_update_standings
 
-from stats_sheet import (
+from services.stats_sheet import (
     append_qb_statline,
     append_wr_statline,
     append_db_statline,

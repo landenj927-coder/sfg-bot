@@ -15,7 +15,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from stats_sheet import (
+from services.stats_sheet import (
     append_qb_statline,
     append_wr_statline,
     append_db_statline,
