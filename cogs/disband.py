@@ -11,10 +11,7 @@ from utils.config import (
     GUILD_ID
 )
 
-from utils.helpers import (
-    get_team_role,
-    find_text_channel_fuzzy
-)
+from utils.helpers import find_text_channel_fuzzy
 
 
 class Disband(commands.Cog):
@@ -29,14 +26,14 @@ class Disband(commands.Cog):
         description="SFG only: disband a team (remove roles from everyone)."
     )
     @app_commands.describe(
-        team="Which NFL team to disband",
+        team_role="Select the team role to disband",
         reason="Why is this team being disbanded?"
     )
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def disband(
         self,
         interaction: discord.Interaction,
-        team: str,
+        team_role: discord.Role,
         reason: str
     ):
         await interaction.response.defer(ephemeral=True)
@@ -62,16 +59,10 @@ class Disband(commands.Cog):
                 ephemeral=True
             )
 
-        if team not in NFL_TEAMS:
+        # ✅ Ensure it's actually a valid team role
+        if team_role.name not in NFL_TEAMS:
             return await interaction.followup.send(
-                "❌ Invalid NFL team.",
-                ephemeral=True
-            )
-
-        team_role = get_team_role(guild, team)
-        if not team_role:
-            return await interaction.followup.send(
-                f"❌ Team role not found: **{team}**",
+                "❌ That role is not a valid team.",
                 ephemeral=True
             )
 
