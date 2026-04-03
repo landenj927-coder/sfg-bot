@@ -312,7 +312,13 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load disband.py: {e}")
             traceback.print_exc()
 
-
+        try:
+            await self.load_extension("cogs.appoint")
+            print("✅ Loaded cog: appoint.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load appoint.py: {e}")
+            traceback.print_exc()
 
 # =========================
 # CREATE BOT INSTANCE
