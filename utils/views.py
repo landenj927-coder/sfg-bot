@@ -249,15 +249,21 @@ class ApplicationRoleSelect(discord.ui.Select):
 
         await log_transaction(self.team_role.guild, embed)
 
+import discord
+
 class StreamClaimView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(timeout=None)  # ✅ REQUIRED
 
-    @discord.ui.button(label="Claim Stream", style=discord.ButtonStyle.green)
+    @discord.ui.button(
+        label="Claim Stream",
+        style=discord.ButtonStyle.green,
+        custom_id="stream_claim_button"  # ✅ REQUIRED
+    )
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
         user = interaction.user
 
-        # Prevent double claiming
+        # Disable button after claim
         for item in self.children:
             item.disabled = True
 
