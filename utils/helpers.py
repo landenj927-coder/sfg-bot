@@ -29,3 +29,6 @@ def normalize_channel_name(name: str) -> str:
     name = name.encode("ascii", "ignore").decode("ascii")
     name = re.sub(r"[^a-z0-9]", "", name.lower())
     return name
+
+def get_team_role(guild, team_name: str):
+    return discord.utils.get(guild.roles, name=team_name)
