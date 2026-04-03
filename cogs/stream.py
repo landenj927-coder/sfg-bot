@@ -16,7 +16,8 @@ from utils.config import (
     TWITCH_LOGO_URL
 )
 
-from utils.helpers import get_team_role, find_streams_channel
+from utils.helpers import get_team_role
+from utils.config import STREAMS_CHANNEL_ID
 from utils.standings import TEAM_EMOJIS
 from utils.autocomplete import nfl_team_autocomplete
 
@@ -107,10 +108,10 @@ class Stream(commands.Cog):
                 ephemeral=True
             )
 
-        streams_ch = find_streams_channel(guild, STREAMS_CHANNEL_NAME)
+        streams_ch = guild.get_channel(STREAMS_CHANNEL_ID)
         if not streams_ch:
             return await interaction.followup.send(
-                "❌ Streams channel not found.",
+                "❌ Streams channel not found (invalid ID).",
                 ephemeral=True
             )
 
