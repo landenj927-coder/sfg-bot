@@ -223,6 +223,8 @@ class SFGBot(commands.Bot):
 
     async def setup_hook(self):
         print("🔄 Loading cogs...")
+        from utils.views import StreamClaimView
+        self.add_view(StreamClaimView())
 
         # =========================
         # LOAD COGS

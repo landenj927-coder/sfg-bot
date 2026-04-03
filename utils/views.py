@@ -248,3 +248,30 @@ class ApplicationRoleSelect(discord.ui.Select):
         )
 
         await log_transaction(self.team_role.guild, embed)
+
+class StreamClaimView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Claim Stream", style=discord.ButtonStyle.green)
+    async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user = interaction.user
+
+        # Prevent double claiming
+        for item in self.children:
+            item.disabled = True
+
+        embed = interaction.message.embeds[0]
+
+        embed.add_field(
+            name="📺 Stream Claimed",
+            value=f"{user.mention} will be streaming this game.",
+            inline=False
+        )
+
+        await interaction.message.edit(embed=embed, view=self)
+
+        await interaction.response.send_message(
+            "✅ You have claimed this stream.",
+            ephemeral=True
+        )
