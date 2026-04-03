@@ -320,6 +320,14 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load appoint.py: {e}")
             traceback.print_exc()
 
+        try:
+            await self.load_extension("cogs.folist")
+            print("✅ Loaded cog: folist.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load folist.py: {e}")
+            traceback.print_exc()
+
 # =========================
 # CREATE BOT INSTANCE
 # =========================
@@ -1819,169 +1827,6 @@ async def stream(
 
     await interaction.response.send_message(
         f"✅ Stream posted in {streams_ch.mention}.",
-        ephemeral=True
-    )
-
-# =========================
-# /APPOINT
-# =========================
-
-@bot.tree.command(
-    name="appoint",
-    description="SFG only: appoint a user as Franchise Owner of a specific team."
-)
-@app_commands.describe(
-    user="User to appoint",
-    team="Which NFL team to assign"
-)
-@app_commands.autocomplete(team=nfl_team_autocomplete)
-async def appoint(
-    interaction: discord.Interaction,
-    user: discord.Member,
-    team: str
-):
-    guild = interaction.guild
-    if not guild:
-        return await interaction.response.send_message("Server-only command.", ephemeral=True)
-
-    issuer = interaction.user
-    if not isinstance(issuer, discord.Member):
-        return await interaction.response.send_message("Couldn’t verify roles.", ephemeral=True)
-
-    # ✅ Only SFG role(s) can use (supports multiple SFG roles)
-    if not any(r.name == "SFG" for r in issuer.roles):
-        return await interaction.response.send_message(
-            "❌ Only users with the **SFG** role can use this command.",
-            ephemeral=True
-        )
-
-    # Validate team
-    if team not in NFL_TEAMS:
-        return await interaction.response.send_message("❌ Invalid NFL team.", ephemeral=True)
-
-    team_role = get_team_role(guild, team)
-    if not team_role:
-        return await interaction.response.send_message(
-            f"❌ Team role not found in server: **{team}**",
-            ephemeral=True
-        )
-
-    fo_role = discord.utils.get(guild.roles, name="Franchise Owner")
-    if not fo_role:
-        return await interaction.response.send_message(
-            "❌ Role not found: **Franchise Owner**",
-            ephemeral=True
-        )
-
-    # ✅ Give roles
-    try:
-        await user.add_roles(
-            fo_role,
-            team_role,
-            reason=f"Appointed by {issuer} as FO of {team}"
-        )
-    except discord.Forbidden:
-        return await interaction.response.send_message(
-            "❌ I can’t assign roles (check my role hierarchy).",
-            ephemeral=True
-        )
-
-    # ✅ DM the appointed user
-    team_logo = TEAM_THUMBNAILS.get(team)
-    dm_embed = discord.Embed(
-        title="SFG Appointment",
-        description=f"You have been appointed as **Franchise Owner** of **{team}**.",
-        color=TEAM_COLORS.get(team, 0x2F3136),
-        timestamp=datetime.utcnow()
-    )
-    if team_logo:
-        dm_embed.set_thumbnail(url=team_logo)
-
-    dm_embed.add_field(name="Appointed By", value=issuer.mention, inline=False)
-    dm_embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
-
-    try:
-        await user.send(embed=dm_embed)
-    except discord.Forbidden:
-        pass  # DMs closed — fine
-
-    # ✅ Log the appointment (font + caps insensitive)
-    logs_channel = find_text_channel_fuzzy(guild, "logs")
-    if logs_channel:
-        await logs_channel.send(
-            f"📋 **Franchise Owner Appointed**\n"
-            f"• **User:** {user.mention}\n"
-            f"• **Team:** {team_role.mention}\n"
-            f"• **Appointed By:** {issuer.mention}"
-        )
-
-    # Confirm to issuer
-    await interaction.response.send_message(
-        f"✅ Appointed {user.mention} as **Franchise Owner** of {team_role.mention}.",
-        ephemeral=True
-    )
-
-# =========================
-# /FOLIST
-# =========================
-
-@bot.tree.command(
-    name="folist",
-    description="Show each NFL team and its Franchise Owner (or N/A)."
-)
-async def folist(interaction: discord.Interaction):
-    guild = interaction.guild
-    if not guild:
-        return await interaction.response.send_message("Server-only command.", ephemeral=True)
-
-    fo_role = discord.utils.get(guild.roles, name="Franchise Owner")
-    if not fo_role:
-        return await interaction.response.send_message(
-            "❌ Role not found: **Franchise Owner**",
-            ephemeral=True
-        )
-
-    lines: list[str] = []
-
-    for team in NFL_TEAMS:
-        team_role = get_team_role(guild, team)
-
-        emoji_str = get_team_emoji(guild, team)
-        team_label = f"{emoji_str} **{team}**" if emoji_str else f"**{team}**"
-
-        owner_text = "N/A"
-        if team_role:
-            owners = [m.mention for m in fo_role.members if team_role in m.roles]
-            if owners:
-                owner_text = ", ".join(owners)
-
-        lines.append(f"{team_label} — {owner_text}")
-
-    # Split to avoid embed limits
-    chunks: list[str] = []
-    current = ""
-    for line in lines:
-        if len(current) + len(line) + 1 > 3800:
-            chunks.append(current)
-            current = ""
-        current += line + "\n"
-    if current:
-        chunks.append(current)
-
-    embeds: list[discord.Embed] = []
-    for i, chunk in enumerate(chunks, start=1):
-        e = discord.Embed(
-            title="Franchise Owner List" + (f" (Page {i}/{len(chunks)})" if len(chunks) > 1 else ""),
-            description=chunk,
-            color=0x2F3136,
-            timestamp=datetime.utcnow()
-        )
-        e.set_thumbnail(url=SFG_LOGO_URL)
-        e.set_footer(text="SFG Bot")
-        embeds.append(e)
-
-    await interaction.response.send_message(
-        embeds=embeds,
         ephemeral=True
     )
 
