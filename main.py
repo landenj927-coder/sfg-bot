@@ -304,6 +304,15 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load applications.py: {e}")
             traceback.print_exc()
 
+        try:
+            await self.load_extension("cogs.disband")
+            print("✅ Loaded cog: disband.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load disband.py: {e}")
+            traceback.print_exc()
+
+
 
 # =========================
 # CREATE BOT INSTANCE
@@ -1968,133 +1977,6 @@ async def folist(interaction: discord.Interaction):
     await interaction.response.send_message(
         embeds=embeds,
         ephemeral=True
-    )
-
-# =========================
-# /DISBAND
-# =========================
-
-@bot.tree.command(
-    name="disband",
-    description="SFG only: disband a team (remove team role from everyone + remove FO/TP/GM tied to that team)."
-)
-@app_commands.describe(
-    team="Which NFL team to disband",
-    reason="Why is this team being disbanded?"
-)
-@app_commands.autocomplete(team=nfl_team_autocomplete)
-async def disband(interaction: discord.Interaction, team: str, reason: str):
-    guild = interaction.guild
-    if not guild:
-        return await interaction.response.send_message("Server-only command.", ephemeral=True)
-
-    issuer = interaction.user
-    if not isinstance(issuer, discord.Member):
-        return await interaction.response.send_message("Couldn’t verify roles.", ephemeral=True)
-
-    # ✅ Only SFG role(s) can use
-    if not any(r.name == "SFG" for r in issuer.roles):
-        return await interaction.response.send_message(
-            "❌ Only users with the **SFG** role can use this command.",
-            ephemeral=True
-        )
-
-    if team not in NFL_TEAMS:
-        return await interaction.response.send_message("❌ Invalid NFL team.", ephemeral=True)
-
-    team_role = get_team_role(guild, team)
-    if not team_role:
-        return await interaction.response.send_message(
-            f"❌ Team role not found: **{team}**",
-            ephemeral=True
-        )
-
-    # Safety check – bot must be able to manage role
-    me = guild.me or guild.get_member(bot.user.id)  # type: ignore
-    if me and team_role >= me.top_role:
-        return await interaction.response.send_message(
-            "❌ I can’t manage that team role (move my bot role above it).",
-            ephemeral=True
-        )
-
-    await interaction.response.defer(ephemeral=True)
-
-    removed_team = 0
-    removed_mgmt = 0
-
-    # Management roles to remove IF tied to this team
-    mgmt_role_names = ("Franchise Owner", "Team President", "General Manager")
-    mgmt_roles: list[discord.Role] = []
-    for rn in mgmt_role_names:
-        r = discord.utils.get(guild.roles, name=rn)
-        if r:
-            mgmt_roles.append(r)
-
-    members_to_update = list(team_role.members)
-
-    for member in members_to_update:
-        roles_to_remove: list[discord.Role] = []
-
-        if team_role in member.roles:
-            roles_to_remove.append(team_role)
-
-        for r in mgmt_roles:
-            if r in member.roles:
-                roles_to_remove.append(r)
-
-        if not roles_to_remove:
-            continue
-
-        try:
-            await member.remove_roles(
-                *roles_to_remove,
-                reason=f"Disbanded {team_role.name} by {issuer} | {reason}"
-            )
-            if team_role in roles_to_remove:
-                removed_team += 1
-            removed_mgmt += sum(1 for r in roles_to_remove if r is not team_role)
-        except discord.Forbidden:
-            continue
-        except Exception:
-            continue
-
-    # ✅ Build LOG embed
-    team_logo = TEAM_THUMBNAILS.get(team_role.name)
-
-    embed = discord.Embed(
-        title=f"{team_role.name} is Disbanded!",
-        color=TEAM_COLORS.get(team_role.name, 0xED4245),
-        timestamp=datetime.utcnow()
-    )
-
-    if team_logo:
-        embed.set_thumbnail(url=team_logo)
-
-    embed.add_field(
-        name="Reason",
-        value=reason.strip()[:1024] or "N/A",
-        inline=False
-    )
-    embed.add_field(
-        name="Disbanded By",
-        value=issuer.mention,
-        inline=False
-    )
-
-    embed.set_footer(text="SFG Bot", icon_url=SFG_LOGO_URL)
-
-    # ✅ Send ONLY to logs (font + caps insensitive)
-    logs_ch = find_text_channel_fuzzy(guild, "logs")
-    if logs_ch:
-        await logs_ch.send(embed=embed)
-
-    await interaction.edit_original_response(
-        content=(
-            f"✅ Disbanded **{team_role.name}**.\n"
-            f"• Removed team role from **{removed_team}** member(s)\n"
-            f"• Removed FO/TP/GM roles from **{removed_mgmt}** total role assignment(s)\n"
-            f"• Logged in **logs**."
-        )
     )
 
 # =========================
