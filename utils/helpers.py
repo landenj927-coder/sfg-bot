@@ -41,3 +41,15 @@ def find_streams_channel(guild, name: str):
             return channel
 
     return None
+
+def get_member_team_name(member):
+    """
+    Returns the team name of a member based on their roles.
+    """
+    from utils.config import NFL_TEAMS
+
+    for role in member.roles:
+        if role.name in NFL_TEAMS:
+            return role.name
+
+    return None
