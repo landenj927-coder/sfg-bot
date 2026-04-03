@@ -345,7 +345,7 @@ class SFGBot(commands.Bot):
             print(f"❌ Failed to load gametime.py: {e}")
             traceback.print_exc()
         try:
-            await self.load_extension("cogs/ruling")
+            await self.load_extension("cogs.ruling")
             print("✅ Loaded cog: ruling.py")
         except Exception as e:
             import traceback
