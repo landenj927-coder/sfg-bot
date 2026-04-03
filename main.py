@@ -335,6 +335,13 @@ class SFGBot(commands.Bot):
             import traceback
             print(f"❌ Failed to load stream.py: {e}")
             traceback.print_exc()
+        try:
+            await self.load_extension("cogs.gametime")
+            print("✅ Loaded cog: gametime.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load gametime.py: {e}")
+            traceback.print_exc()
 
 # =========================
 # CREATE BOT INSTANCE
@@ -1586,121 +1593,6 @@ async def ruling(
 
     if judgements_ch:
         await judgements_ch.send(embed=embed)
-# =========================
-# /GAMETIME
-# =========================
-
-@bot.tree.command(
-    name="gametime",
-    description="Post a scheduled game time between two NFL teams."
-)
-@app_commands.describe(
-    team1="First NFL team",
-    team2="Second NFL team",
-    when="Start time (7:00 PM – 11:00 PM, 15-min intervals)"
-)
-@app_commands.autocomplete(team1=nfl_team_autocomplete, team2=nfl_team_autocomplete)
-@app_commands.choices(when=GAMETIME_TIME_CHOICES)
-async def gametime(
-    interaction: discord.Interaction,
-    team1: str,
-    team2: str,
-    when: app_commands.Choice[str],
-):
-    guild = interaction.guild
-    if not guild:
-        return await interaction.response.send_message("Server-only command.", ephemeral=True)
-
-    if not isinstance(interaction.user, discord.Member):
-        return await interaction.response.send_message("Couldn’t verify roles.", ephemeral=True)
-
-    # Validate teams
-    if team1 not in NFL_TEAMS or team2 not in NFL_TEAMS:
-        return await interaction.response.send_message("❌ Invalid NFL teams.", ephemeral=True)
-
-    if team1 == team2:
-        return await interaction.response.send_message("❌ Teams can’t be the same.", ephemeral=True)
-
-    role1 = get_team_role(guild, team1)
-    role2 = get_team_role(guild, team2)
-    if not role1 or not role2:
-        return await interaction.response.send_message("❌ Team roles missing in server.", ephemeral=True)
-
-    # Must be on one of the teams
-    user_team = get_member_team_name(interaction.user)
-    if user_team not in (team1, team2):
-        return await interaction.response.send_message(
-            f"❌ You must be on {role1.mention} or {role2.mention} to post this.",
-            ephemeral=True
-        )
-
-    # Must have one of the allowed management roles
-    allowed_roles = {"Franchise Owner", "Team President", "General Manager"}
-    if not any(r.name in allowed_roles for r in interaction.user.roles):
-        return await interaction.response.send_message(
-            "❌ Only **Franchise Owners**, **Team Presidents**, or **General Managers** can post game times.",
-            ephemeral=True
-        )
-
-    # Find Gametimes channel (font + case insensitive)
-    gametimes_ch = find_text_channel_fuzzy(guild, "gametimes")
-    if not gametimes_ch:
-        return await interaction.response.send_message("❌ Gametimes channel not found.", ephemeral=True)
-
-    # Parse selected time
-    try:
-        dt = _parse_when_to_dt(when.value)
-    except Exception as e:
-        return await interaction.response.send_message(f"❌ {e}", ephemeral=True)
-
-    unix = int(dt.timestamp())
-    time_full = f"<t:{unix}:t>"
-    time_relative = f"<t:{unix}:R>"
-
-    # Embed color = submitting team
-    color = TEAM_COLORS.get(user_team, 0x2F3136)
-
-    e1 = get_team_emoji(guild, team1)
-    e2 = get_team_emoji(guild, team2)
-
-    left = f"{e1} {role1.mention}".strip()
-    right = f"{e2} {role2.mention}".strip()
-
-    embed = discord.Embed(
-        title="SFG Scheduling",
-        description=f"**Scheduled @ {time_full}**",
-        color=color
-    )
-
-    # SFG logo (top-right)
-    embed.set_thumbnail(url=SFG_LOGO_URL)
-
-    embed.add_field(name="\u200b", value=f"{left} vs {right}", inline=False)
-
-    # Start + Coach combined (no gap)
-    embed.add_field(
-        name="\u200b",
-        value=(
-            f"⏰ **Start:** {time_relative}\n"
-            f"**Coach:** {interaction.user.mention} ({user_team})"
-        ),
-        inline=False
-    )
-
-    embed.set_footer(
-        text=interaction.user.display_name,
-        icon_url=interaction.user.display_avatar.url
-    )
-
-    # ✅ Send with claim button view
-    view = StreamClaimView()
-    await gametimes_ch.send(embed=embed, view=view)
-
-    await interaction.response.send_message(
-        f"✅ Posted in {gametimes_ch.mention}.",
-        ephemeral=True
-    )
-
 # =========================
 # STREAM HELPERS (add once)
 # =========================
