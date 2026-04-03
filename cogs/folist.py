@@ -10,7 +10,7 @@ from utils.config import (
 )
 
 from utils.helpers import get_team_role
-from utils.standings import get_team_emoji
+from utils.standings import TEAM_EMOJIS
 
 
 class FOList(commands.Cog):
@@ -48,7 +48,7 @@ class FOList(commands.Cog):
         for team in NFL_TEAMS:
             team_role = get_team_role(guild, team)
 
-            emoji_str = get_team_emoji(guild, team)
+            emoji_str = TEAM_EMOJIS.get(team, "")
             team_label = f"{emoji_str} **{team}**" if emoji_str else f"**{team}**"
 
             owner_text = "N/A"
