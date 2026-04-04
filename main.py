@@ -22,6 +22,8 @@ from services.stats_sheet import (
     append_de_statline,
     update_playerstats_top15,
 )
+
+from utils.config import APPLICATIONS_RESULTS_CHANNEL_ID
 from utils.standings import NFL_TEAMS, STANDINGS_LOCK, load_standings, save_standings, post_or_update_standings
 from utils.helpers import log_transaction, find_text_channel_fuzzy, normalize_channel_name
 from utils.config import GUILD_ID
@@ -1164,7 +1166,7 @@ class GenericQuestionView(discord.ui.View):
                 [r.mention for r in guild.roles if r.name == "SFG"]
             ) or None
 
-            results_ch = guild.get_channel(RESULTS_CHANNEL_ID)
+            results_ch = guild.get_channel(APPLICATIONS_RESULTS_CHANNEL_ID)
 
             results_embed = _make_results_embed(
                 self.app_title,

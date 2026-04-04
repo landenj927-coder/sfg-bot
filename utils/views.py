@@ -106,8 +106,13 @@ class OfferView(discord.ui.View):
 
 
 # =========================================================
-# APPLICATION SYSTEM
+# APPLICATION SYSTEM (ELITE)
 # =========================================================
+
+from utils.app_questions import APPLICATION_QUESTION_MAP
+from utils.config import APPLICATIONS_RESULTS_CHANNEL_ID
+
+
 APPLICATION_BRANCHES = {
     "Justice": {"options": ["Investigation Staff", "Referee Staff"]},
     "Community": {"options": ["Media Analyst", "Media Owner", "Streamer", "Host"]},
@@ -116,6 +121,54 @@ APPLICATION_BRANCHES = {
 }
 
 
+# =========================
+# STAFF REVIEW VIEW
+# =========================
+class ApplicationReviewView(discord.ui.View):
+    def __init__(self, applicant: discord.Member, role_name: str):
+        super().__init__(timeout=None)
+        self.applicant = applicant
+        self.role_name = role_name
+
+    @discord.ui.button(label="✅ Accept", style=discord.ButtonStyle.green)
+    async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        role = discord.utils.get(interaction.guild.roles, name=self.role_name)
+
+        if role:
+            await self.applicant.add_roles(role)
+
+        await interaction.response.edit_message(
+            content=f"✅ Accepted by {interaction.user.mention}",
+            view=None
+        )
+
+        try:
+            await self.applicant.send(
+                f"🎉 You have been **ACCEPTED** for **{self.role_name}**!"
+            )
+        except:
+            pass
+
+    @discord.ui.button(label="❌ Deny", style=discord.ButtonStyle.red)
+    async def deny(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        await interaction.response.edit_message(
+            content=f"❌ Denied by {interaction.user.mention}",
+            view=None
+        )
+
+        try:
+            await self.applicant.send(
+                f"❌ You have been **DENIED** for **{self.role_name}**."
+            )
+        except:
+            pass
+
+
+# =========================
+# MAIN VIEWS
+# =========================
 class ApplicationBranchView(discord.ui.View):
     def __init__(self, guild: discord.Guild):
         super().__init__(timeout=None)
@@ -134,9 +187,7 @@ class ApplicationBranchSelect(discord.ui.Select):
 
         super().__init__(
             placeholder="Select an application branch",
-            min_values=1,
-            max_values=1,
-            options=options,
+            options=options
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -144,9 +195,9 @@ class ApplicationBranchSelect(discord.ui.Select):
         data = APPLICATION_BRANCHES[branch]
 
         await interaction.response.send_message(
-            content=f"**{branch} Applications**\nSelect what you want to apply for:",
+            f"**{branch} Applications**\nSelect a role:",
             ephemeral=True,
-            view=ApplicationRoleView(branch, data, self.guild),
+            view=ApplicationRoleView(branch, data, self.guild)
         )
 
 
@@ -157,10 +208,10 @@ class ApplicationRoleView(discord.ui.View):
         self.add_item(ApplicationRoleSelect(branch_name, data, guild))
 
     @discord.ui.button(label="⬅ Back", style=discord.ButtonStyle.secondary)
-    async def back_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def back(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.edit_message(
-            content="Select an application branch:",
-            view=ApplicationBranchView(self.guild),
+            content="Select a branch:",
+            view=ApplicationBranchView(self.guild)
         )
 
 
@@ -175,9 +226,7 @@ class ApplicationRoleSelect(discord.ui.Select):
 
         super().__init__(
             placeholder=f"{branch_name} Applications",
-            min_values=1,
-            max_values=1,
-            options=options,
+            options=options
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -188,12 +237,12 @@ class ApplicationRoleSelect(discord.ui.Select):
 
         if not questions:
             return await interaction.response.send_message(
-                "❌ No questions found for this application.",
+                "❌ No questions found.",
                 ephemeral=True
             )
 
         await interaction.response.edit_message(
-            content=f"📩 Check your DMs to apply for **{choice}**.",
+            content=f"📩 Check your DMs for **{choice}** application.",
             view=None
         )
 
@@ -217,14 +266,16 @@ class ApplicationRoleSelect(discord.ui.Select):
 
                 answers.append(msg.content)
 
-            await dm.send("✅ Your application has been submitted!")
+            await dm.send("✅ Application submitted!")
 
-            # SEND TO STAFF CHANNEL
-            channel = self.guild.get_channel(RESULTS_CHANNEL_ID)
+            # =========================
+            # SEND TO STAFF
+            # =========================
+            channel = self.guild.get_channel(APPLICATIONS_RESULTS_CHANNEL_ID)
 
             if channel:
                 embed = discord.Embed(
-                    title=f"📋 New Application - {choice}",
+                    title=f"📋 {choice} Application",
                     color=0x3498DB,
                     timestamp=discord.utils.utcnow()
                 )
@@ -234,13 +285,16 @@ class ApplicationRoleSelect(discord.ui.Select):
                 for i, q in enumerate(questions):
                     embed.add_field(name=q, value=answers[i], inline=False)
 
-                embed.set_footer(text="SFG Bot")
+                embed.set_footer(text="SFG Applications")
 
-                await channel.send(embed=embed)
+                await channel.send(
+                    embed=embed,
+                    view=ApplicationReviewView(user, choice)
+                )
 
         except discord.Forbidden:
             await interaction.followup.send(
-                "❌ I can't DM you. Turn on DMs and try again.",
+                "❌ Enable DMs and try again.",
                 ephemeral=True
             )
 
