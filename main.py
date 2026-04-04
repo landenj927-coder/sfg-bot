@@ -965,64 +965,6 @@ STREAM_COOLDOWN_SECONDS = 24 * 60 * 60
 stream_cooldowns: dict[int, float] = {}  # key = discord user id, value = last-used unix time
 
 # =========================
-# JOIN / LEAVE MESSAGES (Members channel)
-# =========================
-
-MEMBERS_CHANNEL_NAME = "members"  # channel name in your server
-
-def _find_text_channel_by_name(guild: discord.Guild, name: str) -> discord.TextChannel | None:
-    # Uses your normalize_channel_name if you already have it; otherwise simple match.
-    try:
-        target = normalize_channel_name(name)
-        for ch in guild.text_channels:
-            if normalize_channel_name(ch.name) == target:
-                return ch
-    except NameError:
-        for ch in guild.text_channels:
-            if ch.name.lower() == name.lower():
-                return ch
-    return None
-
-@bot.event
-async def on_member_join(member: discord.Member):
-    guild = member.guild
-    ch = _find_text_channel_by_name(guild, MEMBERS_CHANNEL_NAME)
-    if not ch:
-        return
-
-    # member_count is updated on join/leave
-    count = guild.member_count or len(guild.members)
-
-    msg = (
-        f"Welcome to Storcity's Football Gridiron {member.mention}. "
-        f"We now have **{count}** in the community."
-    )
-
-    try:
-        await ch.send(msg)
-    except discord.Forbidden:
-        pass
-
-@bot.event
-async def on_member_remove(member: discord.Member):
-    guild = member.guild
-    ch = _find_text_channel_by_name(guild, MEMBERS_CHANNEL_NAME)
-    if not ch:
-        return
-
-    count = guild.member_count or len(guild.members)
-
-    msg = (
-        f"({member.display_name}) has left Storcity's Football Gridiron. "
-        f"We now have **{count}** in the community."
-    )
-
-    try:
-        await ch.send(msg)
-    except discord.Forbidden:
-        pass
-
-# =========================
 # Applications (FINAL)
 # =========================
 
