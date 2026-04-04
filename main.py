@@ -1018,7 +1018,6 @@ STAT_ANALYST_QUESTIONS = [
     "3.) Have you any experience with this sort of thing?",
 ]
 
-RESULTS_CHANNEL_ID = 1450267610821431458      # where submitted apps get posted
 APPLICATIONS_CHANNEL_ID = 1488379006733779046
 APPLICATION_PANEL_TITLE = "SFG Various Applications"
 

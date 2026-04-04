@@ -5,42 +5,19 @@ from utils.config import (
     TEAM_COLORS,
     TEAM_THUMBNAILS,
     SFG_LOGO_URL,
-    ROSTER_LIMIT
+    ROSTER_LIMIT,
+    RESULTS_CHANNEL_ID
 )
 
 from utils.helpers import log_transaction
 from utils.standings import TEAM_EMOJIS
 
-# 🔥 IMPORT QUESTIONS + RESULTS CHANNEL
-from main import (
-    INVESTIGATION_QUESTIONS,
-    REFEREE_QUESTIONS,
-    MEDIA_ANALYST_QUESTIONS,
-    MEDIA_OWNER_QUESTIONS,
-    STREAMER_QUESTIONS,
-    HOST_QUESTIONS,
-    FRANCHISE_OWNER_QUESTIONS,
-    STAT_ANALYST_QUESTIONS,
-    RESULTS_CHANNEL_ID
-)
-
-# =========================================================
-# QUESTION MAP
-# =========================================================
-APPLICATION_QUESTION_MAP = {
-    "Investigation Staff": INVESTIGATION_QUESTIONS,
-    "Referee Staff": REFEREE_QUESTIONS,
-    "Media Analyst": MEDIA_ANALYST_QUESTIONS,
-    "Media Owner": MEDIA_OWNER_QUESTIONS,
-    "Streamer": STREAMER_QUESTIONS,
-    "Host": HOST_QUESTIONS,
-    "Franchise Owner": FRANCHISE_OWNER_QUESTIONS,
-    "Stat Analyst": STAT_ANALYST_QUESTIONS,
-}
+# 🔥 IMPORT FROM NEW FILE (NO MORE MAIN IMPORT)
+from utils.app_questions import APPLICATION_QUESTION_MAP
 
 
 # =========================================================
-# OFFER SYSTEM (UNCHANGED)
+# OFFER SYSTEM
 # =========================================================
 class OfferView(discord.ui.View):
     def __init__(self, team_role: discord.Role, player: discord.Member, coach: discord.Member):
@@ -272,7 +249,7 @@ class ApplicationRoleSelect(discord.ui.Select):
 
 
 # =========================================================
-# STREAM CLAIM SYSTEM (UNCHANGED)
+# STREAM CLAIM SYSTEM
 # =========================================================
 class StreamClaimView(discord.ui.View):
     def __init__(self):
