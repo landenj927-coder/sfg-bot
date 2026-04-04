@@ -13,7 +13,7 @@ from utils.standings import TEAM_EMOJIS
 
 
 # =========================================================
-# OFFER SYSTEM (FIXED)
+# OFFER SYSTEM
 # =========================================================
 class OfferView(discord.ui.View):
     def __init__(self, team_role: discord.Role, player: discord.Member, coach: discord.Member):
@@ -66,9 +66,6 @@ class OfferView(discord.ui.View):
 
         return embed
 
-    # =========================
-    # ACCEPT
-    # =========================
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
     async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
 
@@ -105,9 +102,6 @@ class OfferView(discord.ui.View):
 
         await log_transaction(self.team_role.guild, embed)
 
-    # =========================
-    # DECLINE
-    # =========================
     @discord.ui.button(label="Decline", style=discord.ButtonStyle.red)
     async def decline(self, interaction: discord.Interaction, button: discord.ui.Button):
 
@@ -131,7 +125,7 @@ class OfferView(discord.ui.View):
 
 
 # =========================================================
-# APPLICATION SYSTEM (CLEAN)
+# APPLICATION SYSTEM
 # =========================================================
 APPLICATION_BRANCHES = {
     "Justice": {
@@ -149,14 +143,20 @@ APPLICATION_BRANCHES = {
 }
 
 
+# =========================
+# BRANCH VIEW
+# =========================
 class ApplicationBranchView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, guild: discord.Guild):
         super().__init__(timeout=None)
-        self.add_item(ApplicationBranchSelect())
+        self.guild = guild
+        self.add_item(ApplicationBranchSelect(guild))
 
 
 class ApplicationBranchSelect(discord.ui.Select):
-    def __init__(self):
+    def __init__(self, guild: discord.Guild):
+        self.guild = guild
+
         options = [
             discord.SelectOption(label=name, value=name)
             for name in APPLICATION_BRANCHES.keys()
@@ -176,25 +176,31 @@ class ApplicationBranchSelect(discord.ui.Select):
         await interaction.response.send_message(
             content=f"**{branch} Applications**\nSelect what you want to apply for:",
             ephemeral=True,
-            view=ApplicationRoleView(branch, data),
+            view=ApplicationRoleView(branch, data, self.guild),
         )
 
 
+# =========================
+# ROLE VIEW
+# =========================
 class ApplicationRoleView(discord.ui.View):
-    def __init__(self, branch_name: str, data: dict):
+    def __init__(self, branch_name: str, data: dict, guild: discord.Guild):
         super().__init__(timeout=300)
-        self.add_item(ApplicationRoleSelect(branch_name, data))
+        self.guild = guild
+        self.add_item(ApplicationRoleSelect(branch_name, data, guild))
 
     @discord.ui.button(label="⬅ Back", style=discord.ButtonStyle.secondary)
     async def back_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.edit_message(
             content="Select an application branch:",
-            view=ApplicationBranchView(),
+            view=ApplicationBranchView(self.guild),
         )
 
 
 class ApplicationRoleSelect(discord.ui.Select):
-    def __init__(self, branch_name: str, data: dict):
+    def __init__(self, branch_name: str, data: dict, guild: discord.Guild):
+        self.guild = guild
+
         options = [
             discord.SelectOption(label=opt, value=opt)
             for opt in data["options"]
