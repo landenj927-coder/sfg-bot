@@ -174,8 +174,16 @@ async def bloxlink_roblox_to_discord_id(guild_id: int, roblox_id: int) -> Option
     session = await get_http_session()
     async with session.get(url, headers={"Authorization": BLOXLINK_API_KEY}) as resp:
         if resp.status != 200:
+            print(f"Bloxlink API error: {resp.status}")
             return None
-        data = await resp.json()
+        
+        try:
+            data = await resp.json()
+        except Exception as e:
+            text = await resp.text()
+            print("Bloxlink returned non-JSON response:")
+            print(text[:500])
+            return None
 
     for key in ("discordID", "discordId", "discord_id"):
         if key in data and str(data[key]).isdigit():
