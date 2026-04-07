@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import json
+from pathlib import Path
 
 from utils.config import GUILD_ID
 from utils.standings import update_game_result, post_or_update_standings
@@ -15,13 +16,62 @@ from services.stats_sheet import (
 )
 
 
+# =========================
+# SCHEDULE FILE
+# =========================
+SCHEDULE_FILE = Path("schedule.json")
+
+
+def load_schedule():
+    if SCHEDULE_FILE.exists():
+        with open(SCHEDULE_FILE, "r") as f:
+            return json.load(f)
+    return None
+
+
+def is_valid_game(team_a, team_b):
+    data = load_schedule()
+    if not data:
+        return False
+
+    for games in data["weeks"].values():
+        for a, b in games:
+            if {a, b} == {team_a, team_b}:
+                return True
+    return False
+
+
+def already_played(team_a, team_b):
+    data = load_schedule()
+    if not data:
+        return False
+
+    played = data.setdefault("played", [])
+
+    matchup = tuple(sorted([team_a, team_b]))
+    return matchup in played
+
+
+def mark_played(team_a, team_b):
+    data = load_schedule()
+    if not data:
+        return
+
+    played = data.setdefault("played", [])
+
+    matchup = tuple(sorted([team_a, team_b]))
+
+    if matchup not in played:
+        played.append(matchup)
+
+    with open(SCHEDULE_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+
 class GameReport(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # =========================
-    # /gamereport
-    # =========================
     @app_commands.command(
         name="gamereport",
         description="Submit full game report (stats + standings)."
@@ -61,9 +111,6 @@ class GameReport(commands.Cog):
 
         await interaction.response.defer()
 
-        # =========================
-        # TEAM VALIDATION
-        # =========================
         team1_name = team1.name
         team2_name = team2.name
 
@@ -74,7 +121,22 @@ class GameReport(commands.Cog):
             )
 
         # =========================
-        # JSON PARSE (SAFE)
+        # 🔥 SCHEDULE VALIDATION
+        # =========================
+        if not is_valid_game(team1_name, team2_name):
+            return await interaction.followup.send(
+                "❌ This matchup is not on the schedule.",
+                ephemeral=True
+            )
+
+        if already_played(team1_name, team2_name):
+            return await interaction.followup.send(
+                "❌ This game has already been reported.",
+                ephemeral=True
+            )
+
+        # =========================
+        # JSON PARSE
         # =========================
         try:
             raw = await json_file.read()
@@ -100,7 +162,7 @@ class GameReport(commands.Cog):
             await post_or_update_standings(guild)
 
             # =========================
-            # PROCESS STATS (IN MEMORY)
+            # PROCESS STATS
             # =========================
             for player in game_data.values():
 
@@ -108,7 +170,6 @@ class GameReport(commands.Cog):
                 wr = player.get("wr", {})
                 db = player.get("db", {})
                 de = player.get("def", {})
-
                 other = player.get("other", {})
 
                 name = (
@@ -119,11 +180,9 @@ class GameReport(commands.Cog):
 
                 team_name = other.get("team", "Free Agent")
 
-                # QB
                 if qb.get("yds", 0) > 0:
                     append_qb_statline(
-                        name,
-                        team_name,
+                        name, team_name,
                         qb.get("qbr", qb.get("rtng", 0)),
                         qb.get("comp", 0),
                         qb.get("yds", 0),
@@ -131,47 +190,42 @@ class GameReport(commands.Cog):
                         qb.get("int", qb.get("ints", 0))
                     )
 
-                # WR
                 if wr.get("yds", 0) > 0:
                     append_wr_statline(
-                        name,
-                        team_name,
+                        name, team_name,
                         wr.get("rec", 0),
                         wr.get("yds", 0),
                         wr.get("td", 0),
                         wr.get("fum", 0)
                     )
 
-                # DB
                 if db.get("int", 0) > 0 or db.get("defl", 0) > 0:
                     append_db_statline(
-                        name,
-                        team_name,
+                        name, team_name,
                         db.get("defl", 0),
                         db.get("int", 0),
                         db.get("rtng", 0)
                     )
 
-                # DE
                 if de.get("sack", 0) > 0:
                     append_de_statline(
-                        name,
-                        team_name,
+                        name, team_name,
                         de.get("sack", 0),
                         de.get("safe", 0),
                         de.get("ffum", 0)
                     )
 
-            # =========================
-            # 🔥 SINGLE WRITE TO SHEETS
-            # =========================
             commit_all_stats()
 
             # =========================
-            # POST TO SCORES
+            # MARK GAME AS PLAYED
             # =========================
-            SCORES_CHANNEL_ID = 1488381961301917807  # your channel ID
+            mark_played(team1_name, team2_name)
 
+            # =========================
+            # POST RESULT
+            # =========================
+            SCORES_CHANNEL_ID = 1488381961301917807
             scores_channel = guild.get_channel(SCORES_CHANNEL_ID)
 
             winner = team1_name if score1 > score2 else team2_name
