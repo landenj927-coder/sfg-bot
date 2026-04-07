@@ -1,6 +1,16 @@
 import discord
 import asyncio
 import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/landenj927-coder/sfg-bot/main/data/standings.json"
+GITHUB_API_URL = "https://api.github.com/repos/landenj927-coder/sfg-bot/contents/data/standings.json"
+
 from pathlib import Path
 from typing import Dict, Any, List
 
