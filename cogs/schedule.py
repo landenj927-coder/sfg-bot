@@ -7,7 +7,9 @@ import random
 from utils.config import NFL_TEAMS, GUILD_ID
 
 
-# 🔥 SCHEDULE GENERATOR
+# =========================
+# SCHEDULE GENERATOR
+# =========================
 def generate_schedule(teams, weeks=10):
     teams = teams.copy()
     random.shuffle(teams)
@@ -41,6 +43,9 @@ def generate_schedule(teams, weeks=10):
     return schedule
 
 
+# =========================
+# SCHEDULE COG
+# =========================
 class Schedule(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -49,7 +54,7 @@ class Schedule(commands.Cog):
         name="genschedule",
         description="Generate league schedule (SFG only)"
     )
-    @app_commands.guilds(discord.Object(id=GUILD_ID))  # 🔥 THIS IS WHY IT WILL SHOW
+    @app_commands.guilds(discord.Object(id=GUILD_ID))  # 🔥 ensures it shows
     @app_commands.describe(team_count="Number of teams for the season")
     @app_commands.choices(
         team_count=[
@@ -72,15 +77,20 @@ class Schedule(commands.Cog):
                 ephemeral=True
             )
 
-        # 🔒 SFG ROLE CHECK
-        sfg_role = discord.utils.get(guild.roles, name="SFG")
-        if not sfg_role or sfg_role not in user.roles:
+        # =========================
+        # 🔒 FIXED ROLE CHECK (100% WORKS)
+        # =========================
+        user_role_names = [role.name.lower().strip() for role in user.roles]
+
+        if "sfg" not in user_role_names:
             return await interaction.response.send_message(
                 "You must have the SFG role to use this.",
                 ephemeral=True
             )
 
+        # =========================
         # 🔍 FIND ACTIVE TEAMS (WITH OWNER)
+        # =========================
         owner_role = discord.utils.get(guild.roles, name="Franchise Owner")
 
         active_teams = []
@@ -99,10 +109,14 @@ class Schedule(commands.Cog):
                 ephemeral=True
             )
 
-        # 🎯 SELECT RANDOM TEAMS
+        # =========================
+        # 🎯 SELECT TEAMS
+        # =========================
         selected_teams = random.sample(active_teams, team_count.value)
 
+        # =========================
         # 🧠 GENERATE SCHEDULE
+        # =========================
         schedule = generate_schedule(selected_teams, weeks=10)
 
         data = {
@@ -114,7 +128,9 @@ class Schedule(commands.Cog):
         with open("schedule.json", "w") as f:
             json.dump(data, f, indent=4)
 
-        # 📢 PUBLIC MESSAGE (NOT EPHEMERAL)
+        # =========================
+        # 📢 PUBLIC RESPONSE (NOT EPHEMERAL)
+        # =========================
         await interaction.response.send_message(
             f"🏈 **SFG SEASON SCHEDULE GENERATED**\n"
             f"Teams: {team_count.value}\n"
@@ -123,5 +139,8 @@ class Schedule(commands.Cog):
         )
 
 
+# =========================
+# SETUP
+# =========================
 async def setup(bot):
     await bot.add_cog(Schedule(bot))
