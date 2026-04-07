@@ -54,103 +54,120 @@ def generate_schedule(teams, weeks=10):
                     available.pop(i)
                     break
 
-            if not t2:
+            if t2 is None:
                 t2 = available.pop()
 
             matchup = tuple(sorted([t1, t2]))
             matchups_played.add(matchup)
-
             schedule[str(week)].append([t1, t2])
 
     return schedule
 
 
 # =========================
-# EMBED BUILDER
+# BUILD WEEK EMBED
 # =========================
 def build_week_embed(week: str, games: list, data: dict):
-    standings = load_standings()
+    standings = load_standings() or {}
     teams_data = standings.get("teams", {})
 
-    # 🏆 SEEDS
+    # Seed teams by wins, then point differential
     sorted_teams = sorted(
         teams_data.items(),
         key=lambda x: (
             -x[1].get("wins", 0),
-            -(x[1].get("pf", 0) - x[1].get("pa", 0))
+            -((x[1].get("pf", 0)) - (x[1].get("pa", 0))),
+            -x[1].get("pf", 0)
         )
     )
-
     seeds = {team: i + 1 for i, (team, _) in enumerate(sorted_teams)}
 
-    # ⏳ DEADLINE
-    week_start = datetime.fromisoformat(data.get("week_start"))
-    deadline = week_start + timedelta(hours=data.get("deadline_hours", 48))
+    # Default seed fallback for teams not yet in standings
+    for team in data.get("teams", []):
+        if team not in seeds:
+            seeds[team] = len(seeds) + 1
+
+    week_start_raw = data.get("week_start")
+    if week_start_raw:
+        week_start = datetime.fromisoformat(week_start_raw)
+    else:
+        week_start = datetime.utcnow()
+
+    deadline_hours = data.get("deadline_hours", 48)
+    deadline = week_start + timedelta(hours=deadline_hours)
     deadline_str = deadline.strftime("%B %d • %I:%M %p UTC")
 
-    # 🔥 MATCHUP SCORING
-    def matchup_score(a, b):
-        seed_a = seeds.get(a, 99)
-        seed_b = seeds.get(b, 99)
+    def get_record(team_name: str) -> str:
+        stats = teams_data.get(team_name, {})
+        return f"{stats.get('wins', 0)}-{stats.get('losses', 0)}"
 
-        rec_a = teams_data.get(a, {})
-        rec_b = teams_data.get(b, {})
+    def get_pd(team_name: str) -> int:
+        stats = teams_data.get(team_name, {})
+        return stats.get("pf", 0) - stats.get("pa", 0)
 
-        pd_a = rec_a.get("pf", 0) - rec_a.get("pa", 0)
-        pd_b = rec_b.get("pf", 0) - rec_b.get("pa", 0)
+    def matchup_score(a: str, b: str):
+        seed_a = seeds.get(a, 999)
+        seed_b = seeds.get(b, 999)
+        pd_a = get_pd(a)
+        pd_b = get_pd(b)
 
-        return (-min(seed_a, seed_b), -(pd_a + pd_b))
+        # Bigger score = more hype
+        return (
+            -(seed_a + seed_b),     # better combined seeds first
+            -(abs(pd_a) + abs(pd_b)),
+            -min(seed_a, seed_b)
+        )
 
     sorted_games = sorted(games, key=lambda g: matchup_score(g[0], g[1]))
     primetime_games = sorted_games[:3]
 
-    # 🌟 PRIMETIME
+    primetime_set = {tuple(sorted(g)) for g in primetime_games}
+    remaining_games = [
+        g for g in games
+        if tuple(sorted(g)) not in primetime_set
+    ]
+
     primetime_lines = []
     for a, b in primetime_games:
         emoji_a = TEAM_EMOJIS.get(a, "")
         emoji_b = TEAM_EMOJIS.get(b, "")
-
         seed_a = seeds.get(a, "-")
         seed_b = seeds.get(b, "-")
-
-        rec_a = teams_data.get(a, {})
-        rec_b = teams_data.get(b, {})
-
-        record_a = f"{rec_a.get('wins',0)}-{rec_a.get('losses',0)}"
-        record_b = f"{rec_b.get('wins',0)}-{rec_b.get('losses',0)}"
+        record_a = get_record(a)
+        record_b = get_record(b)
 
         primetime_lines.append(
-            f"🌟 {emoji_a} **#{seed_a} {a}** ({record_a}) vs {emoji_b} **#{seed_b} {b}** ({record_b})"
+            f"{emoji_a} **#{seed_a} {a}** ({record_a}) vs {emoji_b} **#{seed_b} {b}** ({record_b})"
         )
 
-    # 📋 ALL GAMES
-    lines = []
-    for i, (a, b) in enumerate(games, start=1):
+    matchup_lines = []
+    for i, (a, b) in enumerate(remaining_games, start=1):
         emoji_a = TEAM_EMOJIS.get(a, "")
         emoji_b = TEAM_EMOJIS.get(b, "")
-
         seed_a = seeds.get(a, "-")
         seed_b = seeds.get(b, "-")
+        record_a = get_record(a)
+        record_b = get_record(b)
 
-        rec_a = teams_data.get(a, {})
-        rec_b = teams_data.get(b, {})
-
-        record_a = f"{rec_a.get('wins',0)}-{rec_a.get('losses',0)}"
-        record_b = f"{rec_b.get('wins',0)}-{rec_b.get('losses',0)}"
-
-        lines.append(
+        matchup_lines.append(
             f"`{i:>2}.` {emoji_a} **#{seed_a} {a}** ({record_a}) vs {emoji_b} **#{seed_b} {b}** ({record_b})"
         )
 
     embed = discord.Embed(
         title=f"📅 Week {week} Matchups",
-        description="\n".join(lines),
-        color=0x5865F2
+        color=0x5865F2,
+        timestamp=datetime.utcnow()
     )
 
     embed.add_field(
         name="🌟 Primetime Matchups",
-        value="\n".join(primetime_lines),
+        value="\n".join(primetime_lines) if primetime_lines else "*No primetime games selected.*",
+        inline=False
+    )
+
+    embed.add_field(
+        name="📋 Remaining Matchups",
+        value="\n".join(matchup_lines) if matchup_lines else "*All games are featured as primetime this week.*",
         inline=False
     )
 
@@ -172,7 +189,10 @@ class Schedule(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="genschedule", description="Generate league schedule")
+    @app_commands.command(
+        name="genschedule",
+        description="Generate the season schedule"
+    )
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     @app_commands.choices(
         team_count=[
@@ -182,64 +202,86 @@ class Schedule(commands.Cog):
         ]
     )
     @app_commands.describe(
-        team_count="Number of teams",
-        deadline_hours="Hours to complete games"
+        team_count="How many active teams to use",
+        deadline_hours="How many hours teams have to complete their games"
     )
     async def genschedule(
         self,
         interaction: discord.Interaction,
         team_count: app_commands.Choice[int],
-        deadline_hours: int
+        deadline_hours: app_commands.Range[int, 1, 336]
     ):
         guild = interaction.guild
         user = interaction.user
 
-        if "sfg" not in [r.name.lower() for r in user.roles]:
+        if guild is None:
             return await interaction.response.send_message(
-                "No permission.",
+                "Server only command.",
+                ephemeral=True
+            )
+
+        user_role_names = [role.name.lower().strip() for role in user.roles]
+        if "sfg" not in user_role_names:
+            return await interaction.response.send_message(
+                "You must have the SFG role to use this.",
                 ephemeral=True
             )
 
         owner_role = discord.utils.get(guild.roles, name="Franchise Owner")
-
-        active = []
-        for team in NFL_TEAMS:
-            role = discord.utils.get(guild.roles, name=team)
-            if role and any(owner_role in m.roles for m in role.members):
-                active.append(team)
-
-        if len(active) < team_count.value:
+        if owner_role is None:
             return await interaction.response.send_message(
-                "Not enough active teams.",
+                "Franchise Owner role not found.",
                 ephemeral=True
             )
 
-        selected = random.sample(active, team_count.value)
-        schedule = generate_schedule(selected)
+        active_teams = []
+        for team_name in NFL_TEAMS:
+            role = discord.utils.get(guild.roles, name=team_name)
+            if role is None:
+                continue
+
+            has_owner = any(owner_role in member.roles for member in role.members)
+            if has_owner:
+                active_teams.append(team_name)
+
+        if len(active_teams) < team_count.value:
+            return await interaction.response.send_message(
+                f"Not enough active teams. Found {len(active_teams)}, need {team_count.value}.",
+                ephemeral=True
+            )
+
+        selected_teams = random.sample(active_teams, team_count.value)
+        schedule = generate_schedule(selected_teams, weeks=10)
 
         data = {
             "season": 1,
-            "teams": selected,
+            "teams": selected_teams,
             "weeks": schedule,
             "messages": {},
             "current_week": 1,
             "played": [],
-            "deadline_hours": deadline_hours,
+            "deadline_hours": int(deadline_hours),
             "week_start": datetime.utcnow().isoformat()
         }
 
         save_schedule(data)
 
         channel = guild.get_channel(SCHEDULE_CHANNEL_ID)
+        if channel is None:
+            return await interaction.response.send_message(
+                "Schedule channel not found.",
+                ephemeral=True
+            )
 
-        embed = build_week_embed("1", schedule["1"], data)
+        week = "1"
+        embed = build_week_embed(week, schedule[week], data)
         msg = await channel.send(embed=embed)
 
-        data["messages"]["1"] = msg.id
+        data["messages"][week] = msg.id
         save_schedule(data)
 
         await interaction.response.send_message(
-            "✅ Schedule generated. Week 1 posted.",
+            "✅ Schedule generated. Week 1 has been posted.",
             ephemeral=True
         )
 
