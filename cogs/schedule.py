@@ -4,29 +4,21 @@ from discord import app_commands
 import json
 import random
 from pathlib import Path
+from datetime import datetime, timedelta
 
 from utils.config import NFL_TEAMS, GUILD_ID
 from utils.constants import SCHEDULE_CHANNEL_ID
-from utils.standings import TEAM_EMOJIS
+from utils.standings import TEAM_EMOJIS, load_standings
 
 
 SCHEDULE_FILE = Path("schedule.json")
 
 
-# =========================
-# LOAD / SAVE
-# =========================
 def load_schedule():
     if SCHEDULE_FILE.exists():
         with open(SCHEDULE_FILE, "r") as f:
             return json.load(f)
-    return {
-        "season": 1,
-        "teams": [],
-        "weeks": {},
-        "messages": {},
-        "current_week": 1
-    }
+    return None
 
 
 def save_schedule(data):
@@ -34,9 +26,6 @@ def save_schedule(data):
         json.dump(data, f, indent=4)
 
 
-# =========================
-# GENERATE SCHEDULE
-# =========================
 def generate_schedule(teams, weeks=10):
     teams = teams.copy()
     random.shuffle(teams)
@@ -70,18 +59,30 @@ def generate_schedule(teams, weeks=10):
     return schedule
 
 
-# =========================
-# EMBED BUILDER
-# =========================
-def build_week_embed(week: str, games: list):
+def build_week_embed(week: str, games: list, data: dict):
+    standings = load_standings()
+    team_stats = standings.get("teams", {})
+
+    week_start = datetime.fromisoformat(data.get("week_start"))
+    deadline_hours = data.get("deadline_hours", 48)
+    deadline = week_start + timedelta(hours=deadline_hours)
+
+    deadline_str = deadline.strftime("%B %d • %I:%M %p UTC")
+
     lines = []
 
     for i, (a, b) in enumerate(games, start=1):
         emoji_a = TEAM_EMOJIS.get(a, "")
         emoji_b = TEAM_EMOJIS.get(b, "")
 
+        rec_a = team_stats.get(a, {})
+        rec_b = team_stats.get(b, {})
+
+        record_a = f"{rec_a.get('wins',0)}-{rec_a.get('losses',0)}"
+        record_b = f"{rec_b.get('wins',0)}-{rec_b.get('losses',0)}"
+
         lines.append(
-            f"`{i:>2}.` {emoji_a} **{a}** vs {emoji_b} **{b}**"
+            f"`{i:>2}.` {emoji_a} **{a}** ({record_a}) vs {emoji_b} **{b}** ({record_b})"
         )
 
     embed = discord.Embed(
@@ -90,22 +91,22 @@ def build_week_embed(week: str, games: list):
         color=0x5865F2
     )
 
+    embed.add_field(
+        name="⏳ Deadline",
+        value=f"Ends: **{deadline_str}**",
+        inline=False
+    )
+
     embed.set_footer(text="SFG League • Official Schedule")
 
     return embed
 
 
-# =========================
-# COG
-# =========================
 class Schedule(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(
-        name="genschedule",
-        description="Generate league schedule (SFG only)"
-    )
+    @app_commands.command(name="genschedule", description="Generate schedule")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     @app_commands.choices(
         team_count=[
@@ -114,98 +115,53 @@ class Schedule(commands.Cog):
             app_commands.Choice(name="32 Teams", value=32),
         ]
     )
-    async def genschedule(
-        self,
-        interaction: discord.Interaction,
-        team_count: app_commands.Choice[int]
-    ):
+    @app_commands.describe(
+        team_count="Number of teams",
+        deadline_hours="Hours teams have to play games"
+    )
+    async def genschedule(self, interaction: discord.Interaction, team_count: app_commands.Choice[int], deadline_hours: int):
+
         guild = interaction.guild
         user = interaction.user
 
-        if guild is None:
-            return await interaction.response.send_message(
-                "Server only command.",
-                ephemeral=True
-            )
+        if "sfg" not in [r.name.lower() for r in user.roles]:
+            return await interaction.response.send_message("No permission.", ephemeral=True)
 
-        # 🔒 ROLE CHECK
-        if "sfg" not in [r.name.lower().strip() for r in user.roles]:
-            return await interaction.response.send_message(
-                "You must have the SFG role to use this.",
-                ephemeral=True
-            )
-
-        # 🔍 FIND ACTIVE TEAMS
         owner_role = discord.utils.get(guild.roles, name="Franchise Owner")
 
-        active_teams = []
-        for team_name in NFL_TEAMS:
-            role = discord.utils.get(guild.roles, name=team_name)
-            if not role:
-                continue
+        active = []
+        for team in NFL_TEAMS:
+            role = discord.utils.get(guild.roles, name=team)
+            if role and any(owner_role in m.roles for m in role.members):
+                active.append(team)
 
-            has_owner = any(owner_role in m.roles for m in role.members)
-            if has_owner:
-                active_teams.append(team_name)
+        selected = random.sample(active, team_count.value)
+        schedule = generate_schedule(selected)
 
-        if len(active_teams) < team_count.value:
-            return await interaction.response.send_message(
-                f"Not enough active teams. Found {len(active_teams)}, need {team_count.value}.",
-                ephemeral=True
-            )
-
-        # 🎯 SELECT TEAMS
-        selected_teams = random.sample(active_teams, team_count.value)
-
-        # 🧠 GENERATE SCHEDULE
-        schedule = generate_schedule(selected_teams, weeks=10)
-
-        # =========================
-        # SAVE DATA
-        # =========================
         data = {
             "season": 1,
-            "teams": selected_teams,
+            "teams": selected,
             "weeks": schedule,
             "messages": {},
             "current_week": 1,
-            "played": []
+            "played": [],
+            "deadline_hours": deadline_hours,
+            "week_start": datetime.utcnow().isoformat()
         }
 
         save_schedule(data)
 
-        # =========================
-        # POST ONLY WEEK 1
-        # =========================
         channel = guild.get_channel(SCHEDULE_CHANNEL_ID)
 
-        if not channel:
-            return await interaction.response.send_message(
-                "Schedule channel not found.",
-                ephemeral=True
-            )
-
-        week = "1"
-        games = schedule[week]
-
-        embed = build_week_embed(week, games)
+        games = schedule["1"]
+        embed = build_week_embed("1", games, data)
 
         msg = await channel.send(embed=embed)
-
-        data["messages"][week] = msg.id
+        data["messages"]["1"] = msg.id
         save_schedule(data)
 
-        # =========================
-        # RESPONSE
-        # =========================
-        await interaction.response.send_message(
-            "✅ Schedule generated. Week 1 has been posted.",
-            ephemeral=True
-        )
+        await interaction.response.send_message("✅ Week 1 posted.", ephemeral=True)
 
 
-# =========================
-# SETUP
-# =========================
 async def setup(bot):
     await bot.add_cog(Schedule(bot))
