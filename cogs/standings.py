@@ -2,6 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from typing import Optional
+from pathlib import Path
+import json
 
 from utils.config import GUILD_ID
 
@@ -12,6 +14,24 @@ from utils.standings import (
     reset_standings,
     STANDINGS_LOCK,
 )
+
+
+# =========================
+# 🔥 NEW: SCHEDULE INTEGRATION
+# =========================
+SCHEDULE_FILE = Path("schedule.json")
+
+
+def get_active_teams():
+    if not SCHEDULE_FILE.exists():
+        return None
+
+    try:
+        with open(SCHEDULE_FILE, "r") as f:
+            data = json.load(f)
+            return data.get("teams", None)
+    except:
+        return None
 
 
 class Standings(commands.Cog):
@@ -37,7 +57,23 @@ class Standings(commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
 
-        # lock + load handled inside utils now
+        # =========================
+        # 🔥 FILTER TO ACTIVE TEAMS
+        # =========================
+        active_teams = get_active_teams()
+
+        if active_teams:
+            data = load_standings()
+
+            # keep only teams in current season
+            data["teams"] = {
+                k: v for k, v in data["teams"].items()
+                if k in active_teams
+            }
+
+            save_standings(data)
+
+        # post/update normally
         await post_or_update_standings(guild)
 
         await interaction.followup.send(
@@ -72,8 +108,10 @@ class Standings(commands.Cog):
                 ephemeral=True
             )
 
-        # permission check
-        is_sfg = any(r.name == "SFG" for r in interaction.user.roles)
+        # =========================
+        # 🔒 PERMISSIONS
+        # =========================
+        is_sfg = any(r.name.lower() == "sfg" for r in interaction.user.roles)
         perms = interaction.user.guild_permissions
 
         if not (is_sfg or perms.administrator or perms.manage_guild):
@@ -96,7 +134,7 @@ class Standings(commands.Cog):
             else:
                 new_season = int(data.get("season", 1)) + 1
 
-            # FULL RESET (this replaces old _fresh_standings logic)
+            # reset everything
             reset_standings()
 
             data = load_standings()
@@ -105,7 +143,6 @@ class Standings(commands.Cog):
 
             save_standings(data)
 
-        # ⚠️ FIXED: removed extra argument
         await post_or_update_standings(guild)
 
         await interaction.followup.send(
