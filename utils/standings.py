@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List
 
+SCHEDULE_FILE = Path("schedule.json")
+
 # =========================================================
 # CONFIG
 # =========================================================
@@ -53,6 +55,20 @@ TEAM_EMOJIS = {
     "Tennessee": "<:TennesseeTitans:1488400447948460042>",
     "Washington": "<:WashingtonFootballTeam:1488400469221969970>",
 }
+
+
+SCHEDULE_FILE = Path("schedule.json")
+
+def get_active_teams():
+    if not SCHEDULE_FILE.exists():
+        return None
+
+    try:
+        with open(SCHEDULE_FILE, "r") as f:
+            data = json.load(f)
+            return data.get("teams", None)
+    except:
+        return None
 
 # =========================================================
 # FILE HANDLING
@@ -176,7 +192,12 @@ def format_team_line(rank: int, name: str, wins: int, losses: int, pd: int, stre
 
 def build_standings_embed(data: Dict[str, Any]) -> discord.Embed:
     season = data.get("season", 1)
-    teams = data["teams"]
+    active_teams = get_active_teams()
+
+    if active_teams:
+        teams = {k: v for k, v in data["teams"].items() if k in active_teams}
+    else:
+        teams = data["teams"]
 
     sorted_teams = sorted(
         teams.items(),
@@ -193,12 +214,18 @@ def build_standings_embed(data: Dict[str, Any]) -> discord.Embed:
         color=discord.Color.blue()
     )
 
-    divisions = [
-        ("📊 Division 1 (1–8)", sorted_teams[0:8]),
-        ("📊 Division 2 (9–16)", sorted_teams[8:16]),
-        ("📊 Division 3 (17–24)", sorted_teams[16:24]),
-        ("📊 Division 4 (25–32)", sorted_teams[24:32]),
-    ]
+    divisions = []
+    chunk_size = 8
+
+    for i in range(0, len(sorted_teams), chunk_size):
+        start = i + 1
+        end = i +len(sorted_teams[i:i+chunk_size])
+
+        divisions.append(
+            (f"📊 Division {(i // chunk_size) + 1} ({start}–{end})",
+             sorted_teams[i:i + chunk_size])
+        )
+
 
     rank = 1
 
