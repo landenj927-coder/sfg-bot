@@ -31,7 +31,15 @@ def normalize_channel_name(name: str) -> str:
     return name
 
 def get_team_role(guild, team_name: str):
-    return discord.utils.get(guild.roles, name=team_name)
+    team_name_clean = team_name.replace(" ", "").lower()
+
+    for role in guild.roles:
+        role_clean = role.name.replace(" ", "").lower()
+
+        if role_clean == team_name_clean:
+            return role
+
+    return None
 
 def find_streams_channel(guild, name: str):
     name = name.lower()
