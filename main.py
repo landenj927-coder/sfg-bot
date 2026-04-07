@@ -361,6 +361,13 @@ class SFGBot(commands.Bot):
             import traceback
             print(f"❌ Failed to load ruling.py: {e}")
             traceback.print_exc()
+        try:
+            await self.load_extension("cogs.schedule")
+            print("✅ Loaded cog: schedule.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load schedule.py: {e}")
+            traceback.print_exc()
 
 # =========================
 # CREATE BOT INSTANCE

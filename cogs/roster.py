@@ -117,7 +117,7 @@ class Roster(commands.Cog):
             icon_url=SFG_LOGO_URL
         )
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(bot):
