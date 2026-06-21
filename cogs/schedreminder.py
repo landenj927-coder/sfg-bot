@@ -228,5 +228,13 @@ class ScheduleReminder(commands.Cog):
         await interaction.followup.send(response, ephemeral=True)
 
 
+@app_commands.command(name="schedulepath", description="Check where the bot is looking for schedule.json.")
+@app_commands.guilds(discord.Object(id=GUILD_ID))
+async def schedulepath(self, interaction: discord.Interaction):
+    await interaction.response.send_message(
+        f"Looking for schedule here:\n`{SCHEDULE_FILE}`\n\nExists: `{SCHEDULE_FILE.exists()}`",
+        ephemeral=True
+    )
+
 async def setup(bot):
     await bot.add_cog(ScheduleReminder(bot))
