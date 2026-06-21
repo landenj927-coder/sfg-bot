@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from utils.config import (
     NFL_TEAMS,
@@ -20,7 +21,6 @@ from utils.helpers import (
 from utils.standings import TEAM_EMOJIS
 from utils.autocomplete import nfl_team_autocomplete
 from utils.views import StreamClaimView
-from utils.time_parser import _parse_when_to_dt  # assuming you have this
 
 
 class Gametime(commands.Cog):
@@ -113,14 +113,24 @@ class Gametime(commands.Cog):
         # =========================
         # TIME PARSING
         # =========================
-        try:
-            dt = _parse_when_to_dt(when.value)
-        except Exception as e:
-            return await interaction.followup.send(f"❌ {e}", ephemeral=True)
+        eastern = ZoneInfo("America/New_York")
+        now = datetime.now(eastern)
 
+        dt = datetime.strptime(when.value, "%I:%M %p").replace(
+            year=now.year,
+            month=now.year,
+            day=now.day,
+            tzinfo=eastern
+        
+        )
+
+        if dt <= now:
+            dt += timedelta(days=1)
+        
         unix = int(dt.timestamp())
         time_full = f"<t:{unix}:t>"
         time_relative = f"<t:{unix}:R>"
+  
 
         # =========================
         # EMBED BUILD
