@@ -135,7 +135,7 @@ class Gametime(commands.Cog):
 
         embed = discord.Embed(
             title="SFG Scheduling",
-            description=f"**Scheduled @ {time_full}**",
+            description=f"**Scheduled @ {when.name}**",
             color=color
         )
 
