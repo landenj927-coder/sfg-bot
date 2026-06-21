@@ -11,7 +11,7 @@ from utils.constants import SCHEDULE_CHANNEL_ID
 from utils.standings import TEAM_EMOJIS, load_standings
 
 
-SCHEDULE_FILE = Path("schedule.json")
+SCHEDULE_FILE = Path(__file__).resolve().parent.parent / "schedule.json"
 
 
 # =========================
