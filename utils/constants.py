@@ -89,7 +89,7 @@ TEAM_THUMBNAILS = {
 # =========================
 # SFG BRANDING
 # =========================
-SFG_LOGO_URL = ""
+SFG_LOGO_URL = "https://raw.githubusercontent.com/landenj927-coder/sfg-bot/main/assets/sfgblue.png"
 
 # =========================
 # CHANNEL NAMES (OPTIONAL)
