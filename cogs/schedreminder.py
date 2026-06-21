@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from utils.config import GUILD_ID, SFG_LOGO_URL
 
-SCHEDULE_FILE = Path(__file__).resolve().parent.parent / "schedule.json"
+SCHEDULE_FILE = Path(__file__).resolve().parent.parent / "data" / "schedule.json"
 
 LOGS_CHANNEL_ID = 1488388876262314194
 SUPPORT_SERVER = "https://discord.gg/sMpccTTX3"
