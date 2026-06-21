@@ -118,7 +118,7 @@ class Gametime(commands.Cog):
 
         dt = datetime.strptime(when.value, "%I:%M %p").replace(
             year=now.year,
-            month=now.year,
+            month=now.month,
             day=now.day,
             tzinfo=eastern
         
