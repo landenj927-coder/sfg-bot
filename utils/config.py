@@ -10,7 +10,7 @@ GUILD_ID = 1194481657584042106
 
 YOUTUBE_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1384/1384060.png"
 TWITCH_LOGO_URL  = "https://cdn-icons-png.flaticon.com/512/5968/5968819.png"
-SFG_LOGO_URL = "https://cdn.discordapp.com/attachments/1488380244237750412/1488996490662641884/sfgblue.png?ex=69cecf8b&is=69cd7e0b&hm=e61d9dc84c14639b2fe81789485534b39a98432a3d1291c71b1abee6332fc8c2&"
+SFG_LOGO_URL = "https://raw.githubusercontent.com/landenj927-coder/sfg-bot/main/assets/sfgblue.png"
 STREAM_COOLDOWN_SECONDS = 86400
 ROSTER_LIMIT = 14
 
