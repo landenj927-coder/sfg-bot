@@ -1,0 +1,20 @@
+{
+"season": 1,
+"current_week": 1,
+"deadline_hours": 48,
+"week_start": "2026-06-22T17:13:00",
+"messages": {},
+"played": [],
+"weeks": {
+"1": [
+["49ers", "Miami"],
+["Tampa", "Baltimore"],
+["Dallas", "Rams"],
+["Cincinnati", "Houston"],
+["Philadelphia", "Arizona"],
+["Buffalo", "Atlanta"],
+["Denver", "Carolina"],
+["Chicago", "Detroit"]
+]
+}
+}
