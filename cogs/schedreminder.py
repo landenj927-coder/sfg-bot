@@ -10,7 +10,7 @@ from utils.config import GUILD_ID, SFG_LOGO_URL
 SCHEDULE_FILE = Path(__file__).resolve().parent.parent / "schedule.json"
 
 LOGS_CHANNEL_ID = 1488388876262314194
-SUPPORT_SERVER = "https://discord.gg/YOURINVITE"
+SUPPORT_SERVER = "https://discord.gg/sMpccTTX3"
 
 
 def load_schedule():
@@ -40,7 +40,6 @@ class ScheduleView(discord.ui.View):
             color=color,
             timestamp=datetime.utcnow()
         )
-
         embed.add_field(name="Franchise Owner", value=self.owner.mention, inline=True)
         embed.add_field(name="Team", value=self.team, inline=True)
         embed.add_field(name="Week", value=self.week, inline=True)
@@ -107,6 +106,17 @@ class ScheduleReminder(commands.Cog):
         self.bot = bot
 
     @app_commands.command(
+        name="schedulepath",
+        description="Check where the bot is looking for schedule.json."
+    )
+    @app_commands.guilds(discord.Object(id=GUILD_ID))
+    async def schedulepath(self, interaction: discord.Interaction):
+        await interaction.response.send_message(
+            f"Looking for schedule here:\n`{SCHEDULE_FILE}`\n\nExists: `{SCHEDULE_FILE.exists()}`",
+            ephemeral=True
+        )
+
+    @app_commands.command(
         name="schedreminders",
         description="DM all franchise owners their weekly scheduling reminders."
     )
@@ -117,7 +127,10 @@ class ScheduleReminder(commands.Cog):
         data = load_schedule()
 
         if not data:
-            return await interaction.followup.send("No schedule found.", ephemeral=True)
+            return await interaction.followup.send(
+                f"No schedule found.\n\nLooking here:\n`{SCHEDULE_FILE}`",
+                ephemeral=True
+            )
 
         guild = interaction.guild
 
@@ -125,7 +138,7 @@ class ScheduleReminder(commands.Cog):
             return await interaction.followup.send("Server only command.", ephemeral=True)
 
         current_week = str(data.get("current_week", 1))
-        games = data["weeks"].get(current_week)
+        games = data.get("weeks", {}).get(current_week)
 
         if not games:
             return await interaction.followup.send(
@@ -144,7 +157,12 @@ class ScheduleReminder(commands.Cog):
             role_a = discord.utils.get(guild.roles, name=team_a)
             role_b = discord.utils.get(guild.roles, name=team_b)
 
-            if not role_a or not role_b:
+            if not role_a:
+                failed.append(f"{team_a} role not found.")
+                continue
+
+            if not role_b:
+                failed.append(f"{team_b} role not found.")
                 continue
 
             owner_a = next(
@@ -227,14 +245,6 @@ class ScheduleReminder(commands.Cog):
 
         await interaction.followup.send(response, ephemeral=True)
 
-
-@app_commands.command(name="schedulepath", description="Check where the bot is looking for schedule.json.")
-@app_commands.guilds(discord.Object(id=GUILD_ID))
-async def schedulepath(self, interaction: discord.Interaction):
-    await interaction.response.send_message(
-        f"Looking for schedule here:\n`{SCHEDULE_FILE}`\n\nExists: `{SCHEDULE_FILE.exists()}`",
-        ephemeral=True
-    )
 
 async def setup(bot):
     await bot.add_cog(ScheduleReminder(bot))
