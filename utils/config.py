@@ -57,7 +57,7 @@ URL_REGEX = re.compile(r"^https?://", re.IGNORECASE)
 # =========================
 NFL_TEAMS = [
     "Arizona Cardinals",
-    "San Franciso 49ers",
+    "San Francisco 49ers",
     "Atlanta Falcons",
     "Tampa Buccaneers",
     "Cleveland Browns",
@@ -92,7 +92,7 @@ NFL_TEAMS = [
 
 TEAM_COLORS = {
     "Arizona Cardinals": 0x97233F,
-    "San Franciso 49ers": 0xAA0000,
+    "San Francisco 49ers": 0xAA0000,
     "Atlanta Falcons": 0xA71930,
     "Tampa Buccaneers": 0xFF0000,
     "Cleveland Browns": 0x311D00,
