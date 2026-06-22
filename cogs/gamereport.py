@@ -19,7 +19,8 @@ from services.stats_sheet import (
 # =========================
 # SCHEDULE FILE
 # =========================
-SCHEDULE_FILE = Path("schedule.json")
+BASE_DIR = Path(__file__).resolve().parent.parent
+SCHEDULE_FILE = BASE_DIR / "data" / "schedule.json"
 
 
 def load_schedule():
@@ -29,15 +30,25 @@ def load_schedule():
     return None
 
 
+def normalize_team(name: str):
+    return name.strip()
+
+
 def is_valid_game(team_a, team_b):
     data = load_schedule()
     if not data:
         return False
 
-    for games in data["weeks"].values():
-        for a, b in games:
-            if {a, b} == {team_a, team_b}:
-                return True
+    team_a = normalize_team(team_a)
+    team_b = normalize_team(team_b)
+
+    current_week = str(data.get("current_week", 1))
+    games = data.get("weeks", {}).get(current_week, [])
+
+    for a, b in games:
+        if {normalize_team(a), normalize_team(b)} == {team_a, team_b}:
+            return True
+
     return False
 
 
@@ -46,10 +57,8 @@ def already_played(team_a, team_b):
     if not data:
         return False
 
-    played = data.setdefault("played", [])
-
-    matchup = tuple(sorted([team_a, team_b]))
-    return matchup in played
+    matchup = sorted([normalize_team(team_a), normalize_team(team_b)])
+    return matchup in data.get("played", [])
 
 
 def mark_played(team_a, team_b):
@@ -59,7 +68,7 @@ def mark_played(team_a, team_b):
 
     played = data.setdefault("played", [])
 
-    matchup = tuple(sorted([team_a, team_b]))
+    matchup = sorted([normalize_team(team_a), normalize_team(team_b)])
 
     if matchup not in played:
         played.append(matchup)
@@ -109,7 +118,7 @@ class GameReport(commands.Cog):
                 ephemeral=True
             )
 
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
 
         team1_name = team1.name
         team2_name = team2.name
@@ -121,7 +130,7 @@ class GameReport(commands.Cog):
             )
 
         # =========================
-        # 🔥 SCHEDULE VALIDATION
+        # SCHEDULE VALIDATION
         # =========================
         if not is_valid_game(team1_name, team2_name):
             return await interaction.followup.send(
