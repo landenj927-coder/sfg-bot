@@ -14,7 +14,8 @@ GITHUB_API_URL = "https://api.github.com/repos/landenj927-coder/sfg-bot/contents
 from pathlib import Path
 from typing import Dict, Any, List
 
-SCHEDULE_FILE = Path("schedule.json")
+BASE_DIR = Path(__file__).resolve().parent.parent
+SCHEDULE_FILE = BASE_DIR / "data" / "schedule.json"
 
 # =========================================================
 # CONFIG
@@ -76,8 +77,20 @@ def get_active_teams():
     try:
         with open(SCHEDULE_FILE, "r") as f:
             data = json.load(f)
-            return data.get("teams", None)
-    except:
+
+        current_week = str(data.get("current_week", 1))
+        games = data.get("weeks", {}).get(current_week, [])
+
+        teams = set()
+
+        for team1, team2 in games:
+            teams.add(team1)
+            teams.add(team2)
+
+        return list(teams)
+
+    except Exception as e:
+        print(f"Error loading active teams: {e}")
         return None
 
 # =========================================================

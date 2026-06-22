@@ -113,6 +113,20 @@ class Standings(commands.Cog):
             ephemeral=True
         )
 
+    @app_commands.command(
+        name="refreshstandings",
+        description="Refresh the standings embed without resetting records."
+    )
+    @app_commands.guilds(discord.Object(id=GUILD_ID))
+    async def refreshstandings(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+
+        await post_or_update_standings(interaction.guild)
+
+        await interaction.followup.send(
+            "✅ Standings refreshed without resetting records.",
+            ephemeral=True
+        )
 
 async def setup(bot):
     await bot.add_cog(Standings(bot))
