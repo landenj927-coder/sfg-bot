@@ -68,9 +68,6 @@ TEAM_EMOJIS = {
     "Washington": "<:WashingtonFootballTeam:1488400469221969970>",
 }
 
-
-SCHEDULE_FILE = Path("schedule.json")
-
 def get_active_teams():
     if not SCHEDULE_FILE.exists():
         return None
