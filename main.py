@@ -23,10 +23,37 @@ from services.stats_sheet import (
     update_playerstats_top15,
 )
 
-from utils.config import APPLICATIONS_RESULTS_CHANNEL_ID
-from utils.standings import NFL_TEAMS, STANDINGS_LOCK, load_standings, save_standings, post_or_update_standings
+from utils.config import (
+    GUILD_ID,
+    APPLICATIONS_RESULTS_CHANNEL_ID,
+    APPLICATIONS_CHANNEL_ID,
+    TRANSACTIONS_CHANNEL,
+    STREAMER_ROLE_NAME,
+    STREAMS_CHANNEL_NAME,
+    GAMETIMES_CHANNEL_NAME,
+    URL_REGEX,
+    ROSTER_LIMIT,
+    LOGS_CHANNEL_ID,
+    SCORES_CHANNEL_ID,
+    SFG_LOGO_URL,
+    STREAM_COOLDOWN_SECONDS,
+    YOUTUBE_COLOR,
+    TWITCH_COLOR,
+    YOUTUBE_LOGO_URL,
+    TWITCH_LOGO_URL,
+    NFL_TEAMS,
+    TEAM_COLORS,
+    TEAM_THUMBNAILS,
+    TEAM_EMOJI_NAME,
+    GAMETIME_TIME_CHOICES,
+)
+from utils.standings import (
+    STANDINGS_LOCK,
+    load_standings,
+    save_standings,
+    post_or_update_standings,
+)
 from utils.helpers import log_transaction, find_text_channel_fuzzy, normalize_channel_name
-from utils.config import GUILD_ID
 
 # ✅ Load .env file
 load_dotenv()
@@ -36,7 +63,7 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 if not DISCORD_TOKEN:
     raise RuntimeError("DISCORD_TOKEN env var not set")
 
-BLOXLINK_API_KEY = "3946b012-4c9c-462f-9b1a-ec0cfbab9ede"  # can be "" to disable
+BLOXLINK_API_KEY = os.getenv("BLOXLINK_API_KEY", "")  # set in Railway/.env; can be "" to disable
 
 # ✅ only block startup if user forgot to replace placeholders
 if not DISCORD_TOKEN or DISCORD_TOKEN == "PASTE_YOUR_DISCORD_BOT_TOKEN_HERE":
@@ -62,71 +89,6 @@ GUILD_OBJ = discord.Object(id=GUILD_ID)
 ACTIVE_GAMEREPORTS: set[int] = set()
 
 ROBLOX_DISCORD_CACHE_FILE = "roblox_discord_cache.json"
-APPLICATIONS_CHANNEL_ID = 1488379006733779046
-TRANSACTIONS_CHANNEL = "transactions"
-STREAMER_ROLE_NAME = "Streamer"
-STREAMS_CHANNEL_NAME = "streams"  # the channel name you want (font/case-insensitive)
-GAMETIMES_CHANNEL_NAME = "gametimes"  # target channel name (font/case-insensitive)
-URL_REGEX = re.compile(r"^https?://", re.IGNORECASE)
-ROSTER_LIMIT = 14
-
-LOGS_CHANNEL_ID = 1448938805083246602
-SCORES_CHANNEL_ID = 1448922961783558154
-
-SFG_LOGO_URL = "https://media.discordapp.net/attachments/1448865755650330734/1448890098299965511/39515399-0233-4dfd-b76d-06b8a850fb3e.png?format=webp&quality=lossless&width=350&height=350"
-
-NFL_TEAMS = [
-    "Arizona","Atlanta","Baltimore","Buffalo","Carolina","Chicago","Cincinnati","Cleveland",
-    "Dallas","Denver","Detroit","GreenBay","Houston","Indianapolis","Jacksonville","Chiefs",
-    "LasVegas","Rams","Chargers","Miami","Minnesota","Patriots","Saints","Giants","Jets",
-    "Philadelphia","Pittsburgh","49ers","Seattle","Tampa","Tennessee","Washington"
-]
-
-TEAM_COLORS = {
-    "Arizona":0x97233F,"Atlanta":0xA71930,"Baltimore":0x241773,"Buffalo":0x00338D,
-    "Carolina":0x0085CA,"Chicago":0x0B162A,"Cincinnati":0xFB4F14,"Cleveland":0x311D00,
-    "Dallas":0x002244,"Denver":0xFB4F14,"Detroit":0x0076B6,"GreenBay":0x203731,
-    "Houston":0x03202F,"Indianapolis":0x002C5F,"Jacksonville":0x006778,"Chiefs":0xE31837,
-    "LasVegas":0x000000,"Rams":0x003594,"Chargers":0x0080C6,"Miami":0x008E97,
-    "Minnesota":0x4F2683,"Patriots":0x002244,"Saints":0xD3BC8D,"Giants":0x0B2265,
-    "Jets":0x125740,"Philadelphia":0x004C54,"Pittsburgh":0xFFB612,"49ers":0xAA0000,
-    "Seattle":0x002244,"Tampa":0xFF0000,"Tennessee":0x4B92DB,"Washington":0x5A1414
-}
-
-TEAM_THUMBNAILS = {
-    "Arizona":      "https://cdn.discordapp.com/emojis/1448881457106915509.webp?size=96&quality=lossless",
-    "Atlanta":      "https://cdn.discordapp.com/emojis/1448881506905751653.webp?size=96&quality=lossless",
-    "Baltimore":    "https://cdn.discordapp.com/emojis/1448881443865362562.webp?size=96&quality=lossless",
-    "Buffalo":      "https://cdn.discordapp.com/emojis/1448881454640533504.webp?size=96&quality=lossless",
-    "Carolina":     "https://cdn.discordapp.com/emojis/1448881511750438923.webp?size=96&quality=lossless",
-    "Chicago":      "https://cdn.discordapp.com/emojis/1448881495694381218.webp?size=96&quality=lossless",
-    "Cincinnati":   "https://cdn.discordapp.com/emojis/1448881436592570369.webp?size=96&quality=lossless",
-    "Cleveland":    "https://cdn.discordapp.com/emojis/1448881438593122346.webp?size=96&quality=lossless",
-    "Dallas":       "https://cdn.discordapp.com/emojis/1448881516422758565.webp?size=96&quality=lossless",
-    "Denver":       "https://cdn.discordapp.com/emojis/1448881475821768785.webp?size=96&quality=lossless",
-    "Detroit":      "https://cdn.discordapp.com/emojis/1448881504754204817.webp?size=96&quality=lossless",
-    "GreenBay":     "https://cdn.discordapp.com/emojis/1448881501574926368.webp?size=96&quality=lossless",
-    "Houston":      "https://cdn.discordapp.com/emojis/1448881477294100617.webp?size=96&quality=lossless",
-    "Indianapolis": "https://cdn.discordapp.com/emojis/1448881486471364679.webp?size=96&quality=lossless",
-    "Jacksonville": "https://cdn.discordapp.com/emojis/1448881484021895170.webp?size=96&quality=lossless",
-    "Chiefs":       "https://cdn.discordapp.com/emojis/1448881473536004106.webp?size=96&quality=lossless",
-    "LasVegas":     "https://cdn.discordapp.com/emojis/1448881471220617402.webp?size=96&quality=lossless",
-    "Rams":         "https://cdn.discordapp.com/emojis/1448881461057814658.webp?size=96&quality=lossless",
-    "Chargers":     "https://cdn.discordapp.com/emojis/1448881467492012032.webp?size=96&quality=lossless",
-    "Miami":        "https://cdn.discordapp.com/emojis/1448881448982679678.webp?size=96&quality=lossless",
-    "Minnesota":    "https://cdn.discordapp.com/emojis/1448881499213664498.webp?size=96&quality=lossless",
-    "Patriots":     "https://cdn.discordapp.com/emojis/1448881447275335812.webp?size=96&quality=lossless",
-    "Saints":       "https://cdn.discordapp.com/emojis/1448881509577658379.webp?size=96&quality=lossless",
-    "Giants":       "https://cdn.discordapp.com/emojis/1448881491022053492.webp?size=96&quality=lossless",
-    "Jets":         "https://cdn.discordapp.com/emojis/1448881451989995661.webp?size=96&quality=lossless",
-    "Philadelphia": "https://cdn.discordapp.com/emojis/1448881488912187513.webp?size=96&quality=lossless",
-    "Pittsburgh":   "https://cdn.discordapp.com/emojis/1448881441516687511.webp?size=96&quality=lossless",
-    "49ers":        "https://cdn.discordapp.com/emojis/1448881463100702791.webp?size=96&quality=lossless",
-    "Seattle":      "https://cdn.discordapp.com/emojis/1448881464950128843.webp?size=96&quality=lossless",
-    "Tampa":        "https://cdn.discordapp.com/emojis/1448881513985736776.webp?size=96&quality=lossless",
-    "Tennessee":    "https://cdn.discordapp.com/emojis/1448881481064644679.webp?size=96&quality=lossless",
-    "Washington":   "https://cdn.discordapp.com/emojis/1448881493509144760.webp?size=96&quality=lossless"
-}
 
 # =========================
 # BLOXLINK (CACHED) + ONE SHARED SESSION
@@ -731,40 +693,6 @@ def normalize_team_name(name: str) -> str:
             .lower()
     )
 
-TEAM_EMOJI_NAME = {
-    "Arizona": "ArizonaCardinals",
-    "Atlanta": "AtlantaFalcons",
-    "Baltimore": "BaltimoreRavens",
-    "Buffalo": "BuffaloBills",
-    "Carolina": "CarolinaPanthers",
-    "Chicago": "ChicagoBears",
-    "Cincinnati": "CincinnatiBengals",
-    "Cleveland": "ClevelandBrowns",
-    "Dallas": "DallasCowboys",
-    "Denver": "DenverBroncos",
-    "Detroit": "DetroitLions",
-    "GreenBay": "GreenBayPackers",
-    "Houston": "HoustonTexans",
-    "Indianapolis": "IndianapolisColts",
-    "Jacksonville": "JacksonvilleJaguars",
-    "Chiefs": "KansasCityChiefs",
-    "LasVegas": "LasVegasRaiders",
-    "Rams": "LosAngelesRams",
-    "Chargers": "LosAngelesChargers",
-    "Miami": "MiamiDolphins",
-    "Minnesota": "MinnesotaVikings",
-    "Patriots": "NewEnglandPatriots",
-    "Saints": "NewOrleansSaints",
-    "Giants": "NewYorkGiants",
-    "Jets": "NewYorkJets",
-    "Philadelphia": "PhiladelphiaEagles",
-    "Pittsburgh": "PittsburghSteelers",
-    "49ers": "SanFrancisco49ers",
-    "Seattle": "SeattleSeahawks",
-    "Tampa": "TampaBayBucaneers",
-    "Tennessee": "TennesseeTitans",
-    "Washington": "WashingtonFootballTeam",
-}
 
 def get_team_emoji(guild: discord.Guild, team_name: str) -> str:
     if not guild:
@@ -880,28 +808,7 @@ def _parse_when_to_dt(when: str) -> datetime:
     raise ValueError("Invalid time format. Use `10:00 PM` or `2025-12-27 22:00`.")
 
 
-# Put this near your other constants/helpers (once)
-GAMETIME_TIME_CHOICES = [
-    app_commands.Choice(name="7:00 PM", value="7:00 PM"),
-    app_commands.Choice(name="7:15 PM", value="7:15 PM"),
-    app_commands.Choice(name="7:30 PM", value="7:30 PM"),
-    app_commands.Choice(name="7:45 PM", value="7:45 PM"),
-    app_commands.Choice(name="8:00 PM", value="8:00 PM"),
-    app_commands.Choice(name="8:15 PM", value="8:15 PM"),
-    app_commands.Choice(name="8:30 PM", value="8:30 PM"),
-    app_commands.Choice(name="8:45 PM", value="8:45 PM"),
-    app_commands.Choice(name="9:00 PM", value="9:00 PM"),
-    app_commands.Choice(name="9:15 PM", value="9:15 PM"),
-    app_commands.Choice(name="9:30 PM", value="9:30 PM"),
-    app_commands.Choice(name="9:45 PM", value="9:45 PM"),
-    app_commands.Choice(name="10:00 PM", value="10:00 PM"),
-    app_commands.Choice(name="10:15 PM", value="10:15 PM"),
-    app_commands.Choice(name="10:30 PM", value="10:30 PM"),
-    app_commands.Choice(name="10:45 PM", value="10:45 PM"),
-    app_commands.Choice(name="11:00 PM", value="11:00 PM"),
-]
 
-STREAMER_ROLE_NAME = "Streamer"  # match your server role name exactly
 
 def _has_role(member: discord.Member, role_name: str) -> bool:
     return any(r.name == role_name for r in member.roles)
@@ -961,18 +868,12 @@ class StreamClaimView(discord.ui.View):
 # =========================
 # STREAM COOLDOWN (add once in helpers)
 # =========================
-STREAM_COOLDOWN_SECONDS = 24 * 60 * 60
 stream_cooldowns: dict[int, float] = {}  # key = discord user id, value = last-used unix time
 
 # =========================
 # STREAM HELPERS (add once)
 # =========================
 
-YOUTUBE_COLOR = 0xFF0000
-TWITCH_COLOR  = 0x9146FF  # Twitch purple
-
-YOUTUBE_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1384/1384060.png"
-TWITCH_LOGO_URL  = "https://cdn-icons-png.flaticon.com/512/5968/5968819.png"
 
 async def nfl_team_autocomplete(interaction: discord.Interaction, current: str):
     current = (current or "").lower().strip()

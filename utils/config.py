@@ -7,7 +7,6 @@ from discord import app_commands
 # =========================
 GUILD_ID = 1194481657584042106
 
-
 YOUTUBE_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1384/1384060.png"
 TWITCH_LOGO_URL  = "https://cdn-icons-png.flaticon.com/512/5968/5968819.png"
 SFG_LOGO_URL = "https://raw.githubusercontent.com/landenj927-coder/sfg-bot/main/assets/sfgblue.png"
@@ -54,28 +53,81 @@ URL_REGEX = re.compile(r"^https?://", re.IGNORECASE)
 
 # =========================
 # TEAMS
+# These MUST match your Discord role names exactly.
 # =========================
 NFL_TEAMS = [
-    "Arizona","Atlanta","Baltimore","Buffalo","Carolina","Chicago","Cincinnati","Cleveland",
-    "Dallas","Denver","Detroit","GreenBay","Houston","Indianapolis","Jacksonville","Chiefs",
-    "LasVegas","Rams","Chargers","Miami","Minnesota","Patriots","Saints","Giants","Jets",
-    "Philadelphia","Pittsburgh","49ers","Seattle","Tampa","Tennessee","Washington"
+    "Arizona Cardinals",
+    "San Franciso 49ers",
+    "Atlanta Falcons",
+    "Tampa Buccaneers",
+    "Cleveland Browns",
+    "Newark",
+    "New York Giants",
+    "New England Patriots",
+    "Indianapolis Colts",
+    "Jacksonville Jaguars",
+    "Washington Commanders",
+    "Cincinnati Bengals",
+    "Miami Dolphins",
+    "New Orleans Saints",
+    "Green Bay Packers",
+    "Houston Texans",
+    "Dallas Cowboys",
+    "Las Vegas Raiders",
+    "Los Angeles Rams",
+    "Kansas City Chiefs",
+    "Los Angeles Chargers",
+    "Minnesota Vikings",
+    "Seattle Seahawks",
+    "Detroit Lions",
+    "Denver Broncos",
+    "Philadelphia Eagles",
+    "Pittsburgh Steelers",
+    "Tennessee Titans",
+    "Baltimore Ravens",
+    "Carolina Panthers",
+    "Chicago Bears",
+    "Buffalo Bills",
 ]
 
 TEAM_COLORS = {
-    "Arizona":0x97233F,"Atlanta":0xA71930,"Baltimore":0x241773,"Buffalo":0x00338D,
-    "Carolina":0x0085CA,"Chicago":0x0B162A,"Cincinnati":0xFB4F14,"Cleveland":0x311D00,
-    "Dallas":0x002244,"Denver":0xFB4F14,"Detroit":0x0076B6,"GreenBay":0x203731,
-    "Houston":0x03202F,"Indianapolis":0x002C5F,"Jacksonville":0x006778,"Chiefs":0xE31837,
-    "LasVegas":0x000000,"Rams":0x003594,"Chargers":0x0080C6,"Miami":0x008E97,
-    "Minnesota":0x4F2683,"Patriots":0x002244,"Saints":0xD3BC8D,"Giants":0x0B2265,
-    "Jets":0x125740,"Philadelphia":0x004C54,"Pittsburgh":0xFFB612,"49ers":0xAA0000,
-    "Seattle":0x002244,"Tampa":0xFF0000,"Tennessee":0x4B92DB,"Washington":0x5A1414
+    "Arizona Cardinals": 0x97233F,
+    "San Franciso 49ers": 0xAA0000,
+    "Atlanta Falcons": 0xA71930,
+    "Tampa Buccaneers": 0xFF0000,
+    "Cleveland Browns": 0x311D00,
+    "Newark": 0x125740,
+    "New York Giants": 0x0B2265,
+    "New England Patriots": 0x002244,
+    "Indianapolis Colts": 0x002C5F,
+    "Jacksonville Jaguars": 0x006778,
+    "Washington Commanders": 0x5A1414,
+    "Cincinnati Bengals": 0xFB4F14,
+    "Miami Dolphins": 0x008E97,
+    "New Orleans Saints": 0xD3BC8D,
+    "Green Bay Packers": 0x203731,
+    "Houston Texans": 0x03202F,
+    "Dallas Cowboys": 0x002244,
+    "Las Vegas Raiders": 0x000000,
+    "Los Angeles Rams": 0x003594,
+    "Kansas City Chiefs": 0xE31837,
+    "Los Angeles Chargers": 0x0080C6,
+    "Minnesota Vikings": 0x4F2683,
+    "Seattle Seahawks": 0x002244,
+    "Detroit Lions": 0x0076B6,
+    "Denver Broncos": 0xFB4F14,
+    "Philadelphia Eagles": 0x004C54,
+    "Pittsburgh Steelers": 0xFFB612,
+    "Tennessee Titans": 0x4B92DB,
+    "Baltimore Ravens": 0x241773,
+    "Carolina Panthers": 0x0085CA,
+    "Chicago Bears": 0x0B162A,
+    "Buffalo Bills": 0x00338D,
 }
 
-TEAM_THUMBNAILS = {}  # paste yours here if needed
+TEAM_THUMBNAILS = {}
 
-TEAM_EMOJI_NAME = {}  # paste yours here if needed
+TEAM_EMOJI_NAME = {}
 
 GAMETIME_TIME_CHOICES = [
     app_commands.Choice(name="7:00 PM", value="7:00 PM"),
