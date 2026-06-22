@@ -15,14 +15,15 @@ from pathlib import Path
 from typing import Dict, Any, List
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 SCHEDULE_FILE = BASE_DIR / "data" / "schedule.json"
+STANDINGS_FILE = BASE_DIR / "data" / "standings.json"
 
 # =========================================================
 # CONFIG
 # =========================================================
 
 STANDINGS_CHANNEL_ID = 1488382113240711189
-STANDINGS_FILE = Path("standings.json")
 STANDINGS_LOCK = asyncio.Lock()
 
 NFL_TEAMS: List[str] = [
