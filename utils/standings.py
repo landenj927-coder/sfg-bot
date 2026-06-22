@@ -3,6 +3,8 @@ import asyncio
 import json
 import os
 from dotenv import load_dotenv
+from pathlib import Path
+from typing import Dict, Any, List
 
 load_dotenv()
 
@@ -11,17 +13,10 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/landenj927-coder/sfg-bot/main/data/standings.json"
 GITHUB_API_URL = "https://api.github.com/repos/landenj927-coder/sfg-bot/contents/data/standings.json"
 
-from pathlib import Path
-from typing import Dict, Any, List
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SCHEDULE_FILE = BASE_DIR / "data" / "schedule.json"
 STANDINGS_FILE = BASE_DIR / "data" / "standings.json"
-
-# =========================================================
-# CONFIG
-# =========================================================
 
 STANDINGS_CHANNEL_ID = 1488382113240711189
 STANDINGS_LOCK = asyncio.Lock()
@@ -68,6 +63,7 @@ TEAM_EMOJIS = {
     "Washington": "<:WashingtonFootballTeam:1488400469221969970>",
 }
 
+
 def get_active_teams():
     if not SCHEDULE_FILE.exists():
         return None
@@ -91,9 +87,6 @@ def get_active_teams():
         print(f"Error loading active teams: {e}")
         return None
 
-# =========================================================
-# FILE HANDLING
-# =========================================================
 
 def _fresh_standings_data(season: int = 1, standings_message_id=None) -> Dict[str, Any]:
     return {
@@ -113,7 +106,6 @@ def load_standings() -> Dict[str, Any]:
     with open(STANDINGS_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # backfill missing keys safely
     if "season" not in data:
         data["season"] = 1
     if "standings_message_id" not in data:
@@ -143,9 +135,6 @@ def reset_standings(season: int = 1, standings_message_id=None):
     data = _fresh_standings_data(season=season, standings_message_id=standings_message_id)
     save_standings(data)
 
-# =========================================================
-# UPDATE GAME RESULT
-# =========================================================
 
 def update_game_result(team1: str, team2: str, score1: int, score2: int):
     data = load_standings()
@@ -171,15 +160,9 @@ def update_game_result(team1: str, team2: str, score1: int, score2: int):
         t1["losses"] += 1
         t2["streak"] = t2["streak"] + 1 if t2["streak"] >= 0 else 1
         t1["streak"] = t1["streak"] - 1 if t1["streak"] <= 0 else -1
-    else:
-        # if ties are not allowed, you can raise instead
-        pass
 
     save_standings(data)
 
-# =========================================================
-# FORMATTING
-# =========================================================
 
 def _rank_display(rank: int) -> str:
     if rank == 1:
@@ -204,12 +187,8 @@ def format_team_line(rank: int, name: str, wins: int, losses: int, pd: int, stre
     rank_display = _rank_display(rank)
     streak_display = _streak_display(streak)
 
-    # keeps that compact look from your screenshot
     return f"{rank_display} {emoji} **{name}** `{wins}-{losses}` `({pd:+})` `{streak_display}`"
 
-# =========================================================
-# EMBED BUILDER
-# =========================================================
 
 def build_standings_embed(data: Dict[str, Any]) -> discord.Embed:
     season = data.get("season", 1)
@@ -236,17 +215,18 @@ def build_standings_embed(data: Dict[str, Any]) -> discord.Embed:
     )
 
     divisions = []
-    chunk_size = 8
+    chunk_size = 4
 
     for i in range(0, len(sorted_teams), chunk_size):
         start = i + 1
-        end = i +len(sorted_teams[i:i+chunk_size])
+        end = i + len(sorted_teams[i:i + chunk_size])
 
         divisions.append(
-            (f"📊 Division {(i // chunk_size) + 1} ({start}–{end})",
-             sorted_teams[i:i + chunk_size])
+            (
+                f"📊 Division {(i // chunk_size) + 1} ({start}–{end})",
+                sorted_teams[i:i + chunk_size]
+            )
         )
-
 
     rank = 1
 
@@ -254,7 +234,7 @@ def build_standings_embed(data: Dict[str, Any]) -> discord.Embed:
         lines = []
 
         for team_name, stats in group:
-            if rank == 15:
+            if rank == 11:
                 lines.append("🔴 **PLAYOFF CUT** ─────────")
 
             wins = stats["wins"]
@@ -274,11 +254,9 @@ def build_standings_embed(data: Dict[str, Any]) -> discord.Embed:
     embed.set_footer(
         text="Sorted by Win% → Point Differential → Wins • PD = PF - PA"
     )
+
     return embed
 
-# =========================================================
-# POST / UPDATE
-# =========================================================
 
 async def post_or_update_standings(guild: discord.Guild):
     async with STANDINGS_LOCK:
@@ -306,8 +284,6 @@ async def post_or_update_standings(guild: discord.Guild):
             except Exception as e:
                 print(f"⚠️ Could not edit standings message: {e}")
 
-        # cleanup old bot standings messages if needed
-        me = guild.me or guild.guild.me if hasattr(guild, "guild") else None
         async for m in channel.history(limit=20):
             try:
                 if m.author.id == guild.me.id:
@@ -319,4 +295,5 @@ async def post_or_update_standings(guild: discord.Guild):
         msg = await channel.send(embed=embed)
         data["standings_message_id"] = msg.id
         save_standings(data)
+
         print("🆕 New standings message created and saved")
