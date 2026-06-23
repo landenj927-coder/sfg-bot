@@ -108,7 +108,7 @@ class FFW(commands.Cog):
             save_standings(standings)
 
         try:
-            await post_or_update_standings(guild, standings)
+            await post_or_update_standings(guild)
         except Exception as e:
             print(f"Standings update failed after /ffw: {type(e).__name__}: {e}")
 
