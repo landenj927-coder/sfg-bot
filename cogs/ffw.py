@@ -166,7 +166,12 @@ class FFW(commands.Cog):
 
         if isinstance(scores_channel, discord.TextChannel):
             await scores_channel.send(embed=embed)
-
+        else:
+            return await interaction.followup.send(
+                f"⚠️ Standings updated, but I could not find the scores channel. Check SCORES_CHANNEL_ID: `{SCORES_CHANNEL_ID}`",
+                ephemeral=True
+            ) 
+        
         await interaction.followup.send(
             f"✅ Forfeit win recorded: **{winner} 14 - 0 {loser}**.",
             ephemeral=True
