@@ -127,7 +127,40 @@ TEAM_COLORS = {
 
 TEAM_THUMBNAILS = {}
 
-TEAM_EMOJI_NAME = {}
+TEAM_EMOJI_NAME = {
+    "Arizona Cardinals": "ArizonaCardinals",
+    "San Francisco 49ers": "SanFrancisco49ers",
+    "Atlanta Falcons": "AtlantaFalcons",
+    "Tampa Buccaneers": "TampaBayBuccaneers",
+    "Cleveland Browns": "ClevelandBrowns",
+    "Newark": "Newark",
+    "New York Giants": "NewYorkGiants",
+    "New England Patriots": "NewEnglandPatriots",
+    "Indianapolis Colts": "IndianapolisColts",
+    "Jacksonville Jaguars": "JacksonvilleJaguars",
+    "Washington Commanders": "WashingtonCommanders",
+    "Cincinnati Bengals": "CincinnatiBengals",
+    "Miami Dolphins": "MiamiDolphins",
+    "New Orleans Saints": "NewOrleansSaints",
+    "Green Bay Packers": "GreenBayPackers",
+    "Houston Texans": "HoustonTexans",
+    "Dallas Cowboys": "DallasCowboys",
+    "Las Vegas Raiders": "LasVegasRaiders",
+    "Los Angeles Rams": "LosAngelesRams",
+    "Kansas City Chiefs": "KansasCityChiefs",
+    "Los Angeles Chargers": "LosAngelesChargers",
+    "Minnesota Vikings": "MinnesotaVikings",
+    "Seattle Seahawks": "SeattleSeahawks",
+    "Detroit Lions": "DetroitLions",
+    "Denver Broncos": "DenverBroncos",
+    "Philadelphia Eagles": "PhiladelphiaEagles",
+    "Pittsburgh Steelers": "PittsburghSteelers",
+    "Tennessee Titans": "TennesseeTitans",
+    "Baltimore Ravens": "BaltimoreRavens",
+    "Carolina Panthers": "CarolinaPanthers",
+    "Chicago Bears": "ChicagoBears",
+    "Buffalo Bills": "BuffaloBills",
+}
 
 GAMETIME_TIME_CHOICES = [
     app_commands.Choice(name="7:00 PM", value="7:00 PM"),
