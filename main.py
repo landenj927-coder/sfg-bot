@@ -344,6 +344,14 @@ class SFGBot(commands.Bot):
             import traceback
             print(f"❌ Failed to load schedreminder.py: {e}")
             traceback.print_exc()
+        try:
+            await self.load_extension("cogs.ffw")
+            print("✅ Loaded cog: ffw.py")
+        except Exception as e:
+            import traceback
+            print(f"❌ Failed to load ffw.py: {e}")
+            traceback.print_exc()
+        
 
 # =========================
 # CREATE BOT INSTANCE
