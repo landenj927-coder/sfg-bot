@@ -1,198 +1,38 @@
 {
-  "teams": {
-    "Arizona": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Atlanta": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Baltimore": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Buffalo": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Carolina": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Chicago": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Cincinnati": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Cleveland": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Dallas": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Denver": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Detroit": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "GreenBay": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Houston": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Indianapolis": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Jacksonville": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Chiefs": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "LasVegas": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Rams": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Chargers": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Miami": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Minnesota": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Patriots": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Saints": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Giants": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Jets": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Philadelphia": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Pittsburgh": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "49ers": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Seattle": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Tampa": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Tennessee": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    },
-    "Washington": {
-      "wins": 0,
-      "losses": 0,
-      "pf": 0,
-      "pa": 0
-    }
-  },
+  "season": 2,
   "standings_message_id": 1454549967078297755,
-  "season": 2
+  "teams": {
+    "Arizona Cardinals": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "San Francisco 49ers": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Atlanta Falcons": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Tampa Buccaneers": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Cleveland Browns": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Newark": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "New York Giants": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "New England Patriots": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Indianapolis Colts": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Jacksonville Jaguars": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Washington Commanders": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Cincinnati Bengals": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Miami Dolphins": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "New Orleans Saints": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Green Bay Packers": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Houston Texans": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Dallas Cowboys": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Las Vegas Raiders": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Los Angeles Rams": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Kansas City Chiefs": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Los Angeles Chargers": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Minnesota Vikings": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Seattle Seahawks": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Detroit Lions": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Denver Broncos": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Philadelphia Eagles": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Pittsburgh Steelers": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Tennessee Titans": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Baltimore Ravens": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Carolina Panthers": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Chicago Bears": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+    "Buffalo Bills": {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0}
+  }
 }
