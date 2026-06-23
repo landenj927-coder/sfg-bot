@@ -14,9 +14,7 @@ from utils.config import (
 )
 
 from utils.standings import (
-    STANDINGS_LOCK,
-    load_standings,
-    save_standings,
+    update_game_result,
     post_or_update_standings,
 )
 
@@ -70,17 +68,11 @@ class FFW(commands.Cog):
 
         guild = interaction.guild
         if not guild:
-            return await interaction.followup.send(
-                "Server-only command.",
-                ephemeral=True
-            )
+            return await interaction.followup.send("Server-only command.", ephemeral=True)
 
         issuer = interaction.user
         if not isinstance(issuer, discord.Member):
-            return await interaction.followup.send(
-                "Couldn’t verify roles.",
-                ephemeral=True
-            )
+            return await interaction.followup.send("Couldn’t verify roles.", ephemeral=True)
 
         if not any(r.name == "SFG" for r in issuer.roles):
             return await interaction.followup.send(
@@ -109,28 +101,13 @@ class FFW(commands.Cog):
         winner = winning_team.name
         loser = losing_team.name
 
-        async with STANDINGS_LOCK:
-            standings = load_standings()
-
-            if "teams" not in standings:
-                standings["teams"] = {}
-
-            for team in (winner, loser):
-                if team not in standings["teams"]:
-                    standings["teams"][team] = {
-                        "wins": 0,
-                        "losses": 0,
-                        "pf": 0,
-                        "pa": 0,
-                    }
-
-            standings["teams"][winner]["wins"] += 1
-            standings["teams"][winner]["pf"] += 14
-
-            standings["teams"][loser]["losses"] += 1
-            standings["teams"][loser]["pa"] += 14
-
-            save_standings(standings)
+        try:
+            update_game_result(winner, loser, 14, 0)
+        except Exception as e:
+            return await interaction.followup.send(
+                f"❌ Failed to update standings.\n```{type(e).__name__}: {e}```",
+                ephemeral=True
+            )
 
         try:
             await post_or_update_standings(guild)

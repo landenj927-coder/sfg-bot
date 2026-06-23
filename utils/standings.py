@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 from typing import Dict, Any, List
 
+from utils.config import NFL_TEAMS
+
 load_dotenv()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -21,48 +23,41 @@ STANDINGS_FILE = BASE_DIR / "data" / "standings.json"
 STANDINGS_CHANNEL_ID = 1488382113240711189
 STANDINGS_LOCK = asyncio.Lock()
 
-NFL_TEAMS: List[str] = [
-    "Arizona", "Atlanta", "Baltimore", "Buffalo", "Carolina", "Chicago", "Cincinnati", "Cleveland",
-    "Dallas", "Denver", "Detroit", "GreenBay", "Houston", "Indianapolis", "Jacksonville", "Chiefs",
-    "LasVegas", "Rams", "Chargers", "Miami", "Minnesota", "Patriots", "Saints", "Giants", "Jets",
-    "Philadelphia", "Pittsburgh", "49ers", "Seattle", "Tampa", "Tennessee", "Washington"
-]
 
 TEAM_EMOJIS = {
-    "Arizona": "<:ArizonaCardinals:1488398835481837609>",
-    "Atlanta": "<:AtlantaFalcons:1448881506905751653>",
-    "Baltimore": "<:BaltimoreRavens:1488398920437600306>",
-    "Buffalo": "<:BuffaloBills:1448881454640533504>",
-    "Carolina": "<:CarolinaPanthers:1488398978545483888>",
-    "Chicago": "<:ChicagoBears:1448881495694381218>",
-    "Cincinnati": "<:CincinnatiBengals:1488399039366955081>",
-    "Cleveland": "<:ClevelandBrowns:1488399104865472532>",
-    "Dallas": "<:DallasCowboys:1488399171118567544>",
-    "Denver": "<:DenverBroncos:1448881475821768785>",
-    "Detroit": "<:DetroitLions:1488399241570156677>",
-    "GreenBay": "<:GreenBayPackers:1488399331630518364>",
-    "Houston": "<:HoustonTexans:1488392844904235058>",
-    "Indianapolis": "<:IndianapolisColts:1488399437012275250>",
-    "Jacksonville": "<:JacksonvilleJaguars:1488399459586015302>",
-    "Chiefs": "<:KansasCityChiefs:1488399480838688808>",
-    "LasVegas": "<:LasVegasRaiders:1488399504582381659>",
-    "Rams": "<:LosAngelesRams:1448881461057814658>",
-    "Chargers": "<:LosAngelesChargers:1488399527861030952>",
-    "Miami": "<:MiamiDolphins:1488399669599141959>",
-    "Minnesota": "<:MinnesotaVikings:1488399693028524082>",
-    "Patriots": "<:NewEnglandPatriots:1488399780416851968>",
-    "Saints": "<:NewOrleansSaints:1488399800264036383>",
-    "Giants": "<:NewYorkGiants:1488399822645104693>",
-    "Jets": "<:NewYorkJets:1488400218075566211>",
-    "Philadelphia": "<:PhiladelphiaEagles:1488400260085841940>",
-    "Pittsburgh": "<:PittsburghSteelers:1488400288921419827>",
-    "49ers": "<:SanFrancisco49ers:1488400308441714782>",
-    "Seattle": "<:SeattleSeahawks:1488400334371033139>",
-    "Tampa": "<:TampaBayBucaneers:1448881513985736776>",
-    "Tennessee": "<:TennesseeTitans:1488400447948460042>",
-    "Washington": "<:WashingtonFootballTeam:1488400469221969970>",
+    "Arizona Cardinals": "<:ArizonaCardinals:1488398835481837609>",
+    "Atlanta Falcons": "<:AtlantaFalcons:1448881506905751653>",
+    "Baltimore Ravens": "<:BaltimoreRavens:1488398920437600306>",
+    "Buffalo Bills": "<:BuffaloBills:1448881454640533504>",
+    "Carolina Panthers": "<:CarolinaPanthers:1488398978545483888>",
+    "Chicago Bears": "<:ChicagoBears:1448881495694381218>",
+    "Cincinnati Bengals": "<:CincinnatiBengals:1488399039366955081>",
+    "Cleveland Browns": "<:ClevelandBrowns:1488399104865472532>",
+    "Dallas Cowboys": "<:DallasCowboys:1488399171118567544>",
+    "Denver Broncos": "<:DenverBroncos:1448881475821768785>",
+    "Detroit Lions": "<:DetroitLions:1488399241570156677>",
+    "Green Bay Packers": "<:GreenBayPackers:1488399331630518364>",
+    "Houston Texans": "<:HoustonTexans:1488392844904235058>",
+    "Indianapolis Colts": "<:IndianapolisColts:1488399437012275250>",
+    "Jacksonville Jaguars": "<:JacksonvilleJaguars:1488399459586015302>",
+    "Kansas City Chiefs": "<:KansasCityChiefs:1488399480838688808>",
+    "Las Vegas Raiders": "<:LasVegasRaiders:1488399504582381659>",
+    "Los Angeles Rams": "<:LosAngelesRams:1448881461057814658>",
+    "Los Angeles Chargers": "<:LosAngelesChargers:1488399527861030952>",
+    "Miami Dolphins": "<:MiamiDolphins:1488399669599141959>",
+    "Minnesota Vikings": "<:MinnesotaVikings:1488399693028524082>",
+    "New England Patriots": "<:NewEnglandPatriots:1488399780416851968>",
+    "New Orleans Saints": "<:NewOrleansSaints:1488399800264036383>",
+    "New York Giants": "<:NewYorkGiants:1488399822645104693>",
+    "Philadelphia Eagles": "<:PhiladelphiaEagles:1488400260085841940>",
+    "Pittsburgh Steelers": "<:PittsburghSteelers:1488400288921419827>",
+    "San Francisco 49ers": "<:SanFrancisco49ers:1488400308441714782>",
+    "Seattle Seahawks": "<:SeattleSeahawks:1488400334371033139>",
+    "Tampa Buccaneers": "<:TampaBayBucaneers:1448881513985736776>",
+    "Tennessee Titans": "<:TennesseeTitans:1488400447948460042>",
+    "Washington Commanders": "<:WashingtonFootballTeam:1488400469221969970>",
+    "Newark": "<:NewYorkJets:1488400218075566211>",
 }
-
 
 def get_active_teams():
     if not SCHEDULE_FILE.exists():
