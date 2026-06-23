@@ -8,6 +8,7 @@ from utils.config import (
     NFL_TEAMS,
     TEAM_COLORS,
     TEAM_THUMBNAILS,
+    TEAM_EMOJI_NAME,
     SFG_LOGO_URL,
     SCORES_CHANNEL_ID,
 )
@@ -18,6 +19,32 @@ from utils.standings import (
     save_standings,
     post_or_update_standings,
 )
+
+
+def normalize_team_name(name: str) -> str:
+    return (
+        name.replace(" ", "")
+            .replace(".", "")
+            .replace("-", "")
+            .lower()
+    )
+
+
+def get_team_emoji(guild: discord.Guild, team_name: str) -> str:
+    if not guild:
+        return ""
+
+    emoji_name = TEAM_EMOJI_NAME.get(team_name)
+    if not emoji_name:
+        return ""
+
+    normalized_lookup = normalize_team_name(emoji_name)
+
+    for emoji in guild.emojis:
+        if normalize_team_name(emoji.name) == normalized_lookup:
+            return str(emoji)
+
+    return ""
 
 
 class FFW(commands.Cog):
@@ -99,10 +126,8 @@ class FFW(commands.Cog):
 
             standings["teams"][winner]["wins"] += 1
             standings["teams"][winner]["pf"] += 14
-            standings["teams"][winner]["pa"] += 0
 
             standings["teams"][loser]["losses"] += 1
-            standings["teams"][loser]["pf"] += 0
             standings["teams"][loser]["pa"] += 14
 
             save_standings(standings)
@@ -114,23 +139,37 @@ class FFW(commands.Cog):
 
         scores_channel = guild.get_channel(SCORES_CHANNEL_ID)
 
+        winner_emoji = get_team_emoji(guild, winner)
+        loser_emoji = get_team_emoji(guild, loser)
+
         team_logo = TEAM_THUMBNAILS.get(winner)
 
         embed = discord.Embed(
-            title="Forfeit Win Recorded",
+            title="🏳️ Official Forfeit Ruling",
             description=(
-                f"{winning_team.mention} defeats {losing_team.mention}\n\n"
-                f"**Final Score:** `{winner} 14 - 0 {loser}`\n"
-                f"**Reason:** Forfeit Loss"
+                f"### {winner_emoji} {winning_team.mention}\n"
+                f"**Wins by Forfeit**\n\n"
+                f"### {loser_emoji} {losing_team.mention}\n"
+                f"**Receives a Forfeit Loss**"
             ),
             color=TEAM_COLORS.get(winner, 0x2F3136),
             timestamp=datetime.utcnow()
         )
 
-        if team_logo:
-            embed.set_thumbnail(url=team_logo)
-        elif SFG_LOGO_URL:
-            embed.set_thumbnail(url=SFG_LOGO_URL)
+        embed.add_field(
+            name="Final Score",
+            value=f"🏈 **{winner} 14 - 0 {loser}**",
+            inline=False
+        )
+
+        embed.add_field(
+            name="Result",
+            value=(
+                f"{winner_emoji} {winning_team.mention} awarded a win.\n"
+                f"{loser_emoji} {losing_team.mention} recorded a forfeit loss."
+            ),
+            inline=False
+        )
 
         embed.add_field(
             name="Recorded By",
@@ -138,8 +177,13 @@ class FFW(commands.Cog):
             inline=False
         )
 
+        if team_logo:
+            embed.set_thumbnail(url=team_logo)
+        elif SFG_LOGO_URL:
+            embed.set_thumbnail(url=SFG_LOGO_URL)
+
         embed.set_footer(
-            text="SFG Bot",
+            text="SFG League Operations",
             icon_url=SFG_LOGO_URL
         )
 
