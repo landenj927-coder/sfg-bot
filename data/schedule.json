@@ -1,20 +1,130 @@
 {
-"season": 1,
-"current_week": 1,
-"deadline_hours": 48,
-"week_start": "2026-06-22T17:13:00",
-"messages": {},
-"played": [],
-"weeks": {
-"1": [
-["San Francisco 49ers", "Miami Dolphins"],
-["Tampa Buccaneers", "Baltimore Ravens"],
-["Dallas Cowboys", "Los Angeles Rams"],
-["Cincinnati Bengals", "Houston Texans"],
-["Philadelphia Eagles", "Arizona Cardinals"],
-["Buffalo Bills", "Atlanta Falcons"],
-["Denver Broncos", "Carolina Panthers"],
-["Chicago Bears", "Detroit Lions"]
-]
-}
+  "season": 1,
+  "current_week": 1,
+  "deadline_hours": 48,
+  "week_start": "2026-06-22T17:13:00",
+  "messages": {},
+  "played": [],
+  "weeks": {
+    "1": [
+      ["San Francisco 49ers", "Miami Dolphins"],
+      ["Tampa Buccaneers", "Baltimore Ravens"],
+      ["Dallas Cowboys", "Los Angeles Rams"],
+      ["Cincinnati Bengals", "Houston Texans"],
+      ["Philadelphia Eagles", "Arizona Cardinals"],
+      ["Buffalo Bills", "Atlanta Falcons"],
+      ["Denver Broncos", "Carolina Panthers"],
+      ["Chicago Bears", "Detroit Lions"]
+    ],
+    "2": [
+      ["San Francisco 49ers", "Baltimore Ravens"],
+      ["Miami Dolphins", "Los Angeles Rams"],
+      ["Tampa Buccaneers", "Houston Texans"],
+      ["Dallas Cowboys", "Arizona Cardinals"],
+      ["Cincinnati Bengals", "Atlanta Falcons"],
+      ["Philadelphia Eagles", "Carolina Panthers"],
+      ["Buffalo Bills", "Detroit Lions"],
+      ["Denver Broncos", "Chicago Bears"]
+    ],
+    "3": [
+      ["San Francisco 49ers", "Los Angeles Rams"],
+      ["Baltimore Ravens", "Houston Texans"],
+      ["Miami Dolphins", "Arizona Cardinals"],
+      ["Tampa Buccaneers", "Atlanta Falcons"],
+      ["Dallas Cowboys", "Carolina Panthers"],
+      ["Cincinnati Bengals", "Detroit Lions"],
+      ["Philadelphia Eagles", "Chicago Bears"],
+      ["Buffalo Bills", "Denver Broncos"]
+    ],
+    "4": [
+      ["San Francisco 49ers", "Houston Texans"],
+      ["Los Angeles Rams", "Arizona Cardinals"],
+      ["Baltimore Ravens", "Atlanta Falcons"],
+      ["Miami Dolphins", "Carolina Panthers"],
+      ["Tampa Buccaneers", "Detroit Lions"],
+      ["Dallas Cowboys", "Chicago Bears"],
+      ["Cincinnati Bengals", "Denver Broncos"],
+      ["Philadelphia Eagles", "Buffalo Bills"]
+    ],
+    "5": [
+      ["San Francisco 49ers", "Arizona Cardinals"],
+      ["Houston Texans", "Atlanta Falcons"],
+      ["Los Angeles Rams", "Carolina Panthers"],
+      ["Baltimore Ravens", "Detroit Lions"],
+      ["Miami Dolphins", "Chicago Bears"],
+      ["Tampa Buccaneers", "Denver Broncos"],
+      ["Dallas Cowboys", "Buffalo Bills"],
+      ["Cincinnati Bengals", "Philadelphia Eagles"]
+    ],
+    "6": [
+      ["San Francisco 49ers", "Atlanta Falcons"],
+      ["Arizona Cardinals", "Carolina Panthers"],
+      ["Houston Texans", "Detroit Lions"],
+      ["Los Angeles Rams", "Chicago Bears"],
+      ["Baltimore Ravens", "Denver Broncos"],
+      ["Miami Dolphins", "Buffalo Bills"],
+      ["Tampa Buccaneers", "Philadelphia Eagles"],
+      ["Dallas Cowboys", "Cincinnati Bengals"]
+    ],
+    "7": [
+      ["San Francisco 49ers", "Carolina Panthers"],
+      ["Atlanta Falcons", "Detroit Lions"],
+      ["Arizona Cardinals", "Chicago Bears"],
+      ["Houston Texans", "Denver Broncos"],
+      ["Los Angeles Rams", "Buffalo Bills"],
+      ["Baltimore Ravens", "Philadelphia Eagles"],
+      ["Miami Dolphins", "Cincinnati Bengals"],
+      ["Tampa Buccaneers", "Dallas Cowboys"]
+    ],
+    "8": [
+      ["San Francisco 49ers", "Detroit Lions"],
+      ["Carolina Panthers", "Chicago Bears"],
+      ["Atlanta Falcons", "Denver Broncos"],
+      ["Arizona Cardinals", "Buffalo Bills"],
+      ["Houston Texans", "Philadelphia Eagles"],
+      ["Los Angeles Rams", "Cincinnati Bengals"],
+      ["Baltimore Ravens", "Dallas Cowboys"],
+      ["Miami Dolphins", "Tampa Buccaneers"]
+    ],
+    "9": [
+      ["San Francisco 49ers", "Chicago Bears"],
+      ["Detroit Lions", "Denver Broncos"],
+      ["Carolina Panthers", "Buffalo Bills"],
+      ["Atlanta Falcons", "Philadelphia Eagles"],
+      ["Arizona Cardinals", "Cincinnati Bengals"],
+      ["Houston Texans", "Dallas Cowboys"],
+      ["Los Angeles Rams", "Tampa Buccaneers"],
+      ["Baltimore Ravens", "Miami Dolphins"]
+    ],
+    "10": [
+      ["San Francisco 49ers", "Denver Broncos"],
+      ["Chicago Bears", "Buffalo Bills"],
+      ["Detroit Lions", "Philadelphia Eagles"],
+      ["Carolina Panthers", "Cincinnati Bengals"],
+      ["Atlanta Falcons", "Dallas Cowboys"],
+      ["Arizona Cardinals", "Tampa Buccaneers"],
+      ["Houston Texans", "Miami Dolphins"],
+      ["Los Angeles Rams", "Baltimore Ravens"]
+    ],
+    "11": [
+      ["San Francisco 49ers", "Buffalo Bills"],
+      ["Denver Broncos", "Philadelphia Eagles"],
+      ["Chicago Bears", "Cincinnati Bengals"],
+      ["Detroit Lions", "Dallas Cowboys"],
+      ["Carolina Panthers", "Tampa Buccaneers"],
+      ["Atlanta Falcons", "Miami Dolphins"],
+      ["Arizona Cardinals", "Baltimore Ravens"],
+      ["Houston Texans", "Los Angeles Rams"]
+    ],
+    "12": [
+      ["San Francisco 49ers", "Philadelphia Eagles"],
+      ["Buffalo Bills", "Cincinnati Bengals"],
+      ["Denver Broncos", "Dallas Cowboys"],
+      ["Chicago Bears", "Tampa Buccaneers"],
+      ["Detroit Lions", "Miami Dolphins"],
+      ["Carolina Panthers", "Baltimore Ravens"],
+      ["Atlanta Falcons", "Los Angeles Rams"],
+      ["Arizona Cardinals", "Houston Texans"]
+    ]
+  }
 }
