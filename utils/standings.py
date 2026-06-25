@@ -2,27 +2,24 @@ import discord
 import asyncio
 import json
 import os
+import base64
+import requests
 from dotenv import load_dotenv
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
 
-from utils.config import NFL_TEAMS
+from utils.config import NFL_TEAMS, STANDINGS_CHANNEL_ID
 
 load_dotenv()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-
-GITHUB_RAW_URL = "https://raw.githubusercontent.com/landenj927-coder/sfg-bot/main/data/standings.json"
 GITHUB_API_URL = "https://api.github.com/repos/landenj927-coder/sfg-bot/contents/data/standings.json"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 SCHEDULE_FILE = BASE_DIR / "data" / "schedule.json"
 STANDINGS_FILE = BASE_DIR / "data" / "standings.json"
 
-STANDINGS_CHANNEL_ID = 1488382113240711189
 STANDINGS_LOCK = asyncio.Lock()
-
 
 TEAM_EMOJIS = {
     "Arizona Cardinals": "<:ArizonaCardinals:1488398835481837609>",
@@ -59,37 +56,43 @@ TEAM_EMOJIS = {
     "Newark": "<:NewYorkJets:1488400218075566211>",
 }
 
-def get_active_teams():
+
+def get_schedule_teams() -> list[str]:
     if not SCHEDULE_FILE.exists():
-        return None
+        return list(NFL_TEAMS)
 
     try:
-        with open(SCHEDULE_FILE, "r") as f:
+        with open(SCHEDULE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        current_week = str(data.get("current_week", 1))
-        games = data.get("weeks", {}).get(current_week, [])
+        teams = []
+        for games in data.get("weeks", {}).values():
+            for team1, team2 in games:
+                if team1 not in teams:
+                    teams.append(team1)
+                if team2 not in teams:
+                    teams.append(team2)
 
-        teams = set()
-
-        for team1, team2 in games:
-            teams.add(team1)
-            teams.add(team2)
-
-        return list(teams)
+        return teams or list(NFL_TEAMS)
 
     except Exception as e:
-        print(f"Error loading active teams: {e}")
-        return None
+        print(f"Error loading schedule teams: {e}")
+        return list(NFL_TEAMS)
+
+
+def get_active_teams():
+    return get_schedule_teams()
 
 
 def _fresh_standings_data(season: int = 1, standings_message_id=None) -> Dict[str, Any]:
+    teams = get_schedule_teams()
+
     return {
         "season": season,
         "standings_message_id": standings_message_id,
         "teams": {
             team: {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0}
-            for team in NFL_TEAMS
+            for team in teams
         }
     }
 
@@ -101,16 +104,19 @@ def load_standings() -> Dict[str, Any]:
     with open(STANDINGS_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    if "season" not in data:
-        data["season"] = 1
-    if "standings_message_id" not in data:
-        data["standings_message_id"] = None
-    if "teams" not in data:
-        data["teams"] = {}
+    data.setdefault("season", 1)
+    data.setdefault("standings_message_id", None)
+    data.setdefault("teams", {})
 
-    for team in NFL_TEAMS:
+    for team in get_schedule_teams():
         if team not in data["teams"]:
-            data["teams"][team] = {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0}
+            data["teams"][team] = {
+                "wins": 0,
+                "losses": 0,
+                "pf": 0,
+                "pa": 0,
+                "streak": 0,
+            }
         else:
             data["teams"][team].setdefault("wins", 0)
             data["teams"][team].setdefault("losses", 0)
@@ -121,13 +127,65 @@ def load_standings() -> Dict[str, Any]:
     return data
 
 
+def push_standings_to_github(data: Dict[str, Any]):
+    if not GITHUB_TOKEN:
+        print("⚠️ GITHUB_TOKEN not set. Standings saved locally only.")
+        return
+
+    try:
+        headers = {
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github+json",
+        }
+
+        get_resp = requests.get(GITHUB_API_URL, headers=headers, timeout=15)
+        sha = None
+
+        if get_resp.status_code == 200:
+            sha = get_resp.json().get("sha")
+
+        content = json.dumps(data, indent=4).encode("utf-8")
+        encoded_content = base64.b64encode(content).decode("utf-8")
+
+        payload = {
+            "message": "Update standings.json",
+            "content": encoded_content,
+            "branch": "main",
+        }
+
+        if sha:
+            payload["sha"] = sha
+
+        put_resp = requests.put(
+            GITHUB_API_URL,
+            headers=headers,
+            json=payload,
+            timeout=15,
+        )
+
+        if put_resp.status_code in (200, 201):
+            print("✅ standings.json pushed to GitHub")
+        else:
+            print(f"⚠️ GitHub standings push failed: {put_resp.status_code} {put_resp.text[:300]}")
+
+    except Exception as e:
+        print(f"⚠️ GitHub standings push error: {type(e).__name__}: {e}")
+
+
 def save_standings(data: Dict[str, Any]):
+    STANDINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+
     with open(STANDINGS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
+    push_standings_to_github(data)
+
 
 def reset_standings(season: int = 1, standings_message_id=None):
-    data = _fresh_standings_data(season=season, standings_message_id=standings_message_id)
+    data = _fresh_standings_data(
+        season=season,
+        standings_message_id=standings_message_id,
+    )
     save_standings(data)
 
 
@@ -135,10 +193,15 @@ def update_game_result(team1: str, team2: str, score1: int, score2: int):
     data = load_standings()
 
     if team1 not in data["teams"] or team2 not in data["teams"]:
-        raise ValueError("One or both team names are invalid.")
+        raise ValueError(
+            f"One or both team names are invalid: '{team1}' vs '{team2}'"
+        )
 
     t1 = data["teams"][team1]
     t2 = data["teams"][team2]
+
+    score1 = int(score1)
+    score2 = int(score2)
 
     t1["pf"] += score1
     t1["pa"] += score2
@@ -177,7 +240,14 @@ def _streak_display(streak: int) -> str:
     return "–"
 
 
-def format_team_line(rank: int, name: str, wins: int, losses: int, pd: int, streak: int) -> str:
+def format_team_line(rank: int, name: str, stats: Dict[str, Any]) -> str:
+    wins = int(stats.get("wins", 0))
+    losses = int(stats.get("losses", 0))
+    pf = int(stats.get("pf", 0))
+    pa = int(stats.get("pa", 0))
+    streak = int(stats.get("streak", 0))
+
+    pd = pf - pa
     emoji = TEAM_EMOJIS.get(name, "🏈")
     rank_display = _rank_display(rank)
     streak_display = _streak_display(streak)
@@ -185,65 +255,65 @@ def format_team_line(rank: int, name: str, wins: int, losses: int, pd: int, stre
     return f"{rank_display} {emoji} **{name}** `{wins}-{losses}` `({pd:+})` `{streak_display}`"
 
 
+def sort_key(item):
+    name, stats = item
+    wins = int(stats.get("wins", 0))
+    losses = int(stats.get("losses", 0))
+    pf = int(stats.get("pf", 0))
+    pa = int(stats.get("pa", 0))
+
+    games = wins + losses
+    win_pct = wins / games if games > 0 else 0.0
+    pd = pf - pa
+
+    return (win_pct, pd, wins)
+
+
 def build_standings_embed(data: Dict[str, Any]) -> discord.Embed:
     season = data.get("season", 1)
-    active_teams = get_active_teams()
+    schedule_teams = get_schedule_teams()
 
-    if active_teams:
-        teams = {k: v for k, v in data["teams"].items() if k in active_teams}
-    else:
-        teams = data["teams"]
+    teams = {
+        team: data["teams"].get(
+            team,
+            {"wins": 0, "losses": 0, "pf": 0, "pa": 0, "streak": 0},
+        )
+        for team in schedule_teams
+    }
 
     sorted_teams = sorted(
         teams.items(),
-        key=lambda x: (
-            -(x[1]["wins"] / max(1, (x[1]["wins"] + x[1]["losses"]))),
-            -((x[1]["pf"] - x[1]["pa"])),
-            -x[1]["wins"]
-        )
+        key=sort_key,
+        reverse=True,
     )
 
     embed = discord.Embed(
         title=f"🏆 SFG Season {season} Standings",
         description="🏈 *Official SFG League Standings*\nSorted by Win % → PD → Wins",
-        color=discord.Color.blue()
+        color=discord.Color.blue(),
     )
 
-    divisions = []
     chunk_size = 4
-
-    for i in range(0, len(sorted_teams), chunk_size):
-        start = i + 1
-        end = i + len(sorted_teams[i:i + chunk_size])
-
-        divisions.append(
-            (
-                f"📊 Division {(i // chunk_size) + 1} ({start}–{end})",
-                sorted_teams[i:i + chunk_size]
-            )
-        )
-
     rank = 1
 
-    for division_name, group in divisions:
+    for i in range(0, len(sorted_teams), chunk_size):
+        group = sorted_teams[i:i + chunk_size]
+        start = i + 1
+        end = i + len(group)
+
         lines = []
 
         for team_name, stats in group:
             if rank == 11:
                 lines.append("🔴 **PLAYOFF CUT** ─────────")
 
-            wins = stats["wins"]
-            losses = stats["losses"]
-            pd = stats["pf"] - stats["pa"]
-            streak = stats.get("streak", 0)
-
-            lines.append(format_team_line(rank, team_name, wins, losses, pd, streak))
+            lines.append(format_team_line(rank, team_name, stats))
             rank += 1
 
         embed.add_field(
-            name=division_name,
+            name=f"📊 Division {(i // chunk_size) + 1} ({start}–{end})",
             value="\n".join(lines) if lines else "No teams",
-            inline=False
+            inline=False,
         )
 
     embed.set_footer(
@@ -270,7 +340,7 @@ async def post_or_update_standings(guild: discord.Guild):
 
         if msg_id:
             try:
-                msg = await channel.fetch_message(msg_id)
+                msg = await channel.fetch_message(int(msg_id))
                 await msg.edit(embed=embed)
                 print("✅ Standings updated by editing existing message")
                 return
@@ -278,14 +348,6 @@ async def post_or_update_standings(guild: discord.Guild):
                 print("⚠️ Stored standings message was not found; creating a new one")
             except Exception as e:
                 print(f"⚠️ Could not edit standings message: {e}")
-
-        async for m in channel.history(limit=20):
-            try:
-                if m.author.id == guild.me.id:
-                    if m.embeds and "Standings" in (m.embeds[0].title or ""):
-                        await m.delete()
-            except Exception:
-                pass
 
         msg = await channel.send(embed=embed)
         data["standings_message_id"] = msg.id
