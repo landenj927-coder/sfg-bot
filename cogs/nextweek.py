@@ -1,13 +1,35 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from utils.config import GUILD_ID
 from utils.constants import SCHEDULE_CHANNEL_ID
 from utils.standings import TEAM_EMOJIS, load_standings
-
 from cogs.schedule import load_schedule, save_schedule
+
+
+def get_schedule_teams(schedule_data: dict) -> list[str]:
+    teams = []
+
+    for games in schedule_data.get("weeks", {}).values():
+        for a, b in games:
+            if a not in teams:
+                teams.append(a)
+            if b not in teams:
+                teams.append(b)
+
+    return teams
+
+
+def get_stats(team: str, standings: dict) -> dict:
+    return standings.get("teams", {}).get(team, {
+        "wins": 0,
+        "losses": 0,
+        "pf": 0,
+        "pa": 0,
+        "streak": 0
+    })
 
 
 def win_pct(stats: dict) -> float:
@@ -21,31 +43,26 @@ def point_diff(stats: dict) -> int:
     return int(stats.get("pf", 0)) - int(stats.get("pa", 0))
 
 
-def get_ranked_teams() -> list[str]:
+def get_seed_map(schedule_data: dict) -> dict[str, int]:
     standings = load_standings()
-    teams = standings.get("teams", {})
+    season_teams = get_schedule_teams(schedule_data)
 
     ranked = sorted(
-        teams.items(),
-        key=lambda x: (
-            win_pct(x[1]),
-            point_diff(x[1]),
-            int(x[1].get("wins", 0)),
+        season_teams,
+        key=lambda team: (
+            win_pct(get_stats(team, standings)),
+            point_diff(get_stats(team, standings)),
+            int(get_stats(team, standings).get("wins", 0)),
         ),
         reverse=True
     )
 
-    return [team for team, stats in ranked]
-
-
-def get_seed_map() -> dict[str, int]:
-    ranked = get_ranked_teams()
-    return {team: index + 1 for index, team in enumerate(ranked[:16])}
+    return {team: i + 1 for i, team in enumerate(ranked)}
 
 
 def get_record(team: str) -> str:
     standings = load_standings()
-    stats = standings.get("teams", {}).get(team, {})
+    stats = get_stats(team, standings)
 
     wins = int(stats.get("wins", 0))
     losses = int(stats.get("losses", 0))
@@ -62,7 +79,7 @@ def team_display(team: str, seed_map: dict[str, int]) -> str:
 
 
 def build_nextweek_embed(week: str, games: list, data: dict) -> discord.Embed:
-    seed_map = get_seed_map()
+    seed_map = get_seed_map(data)
 
     embed = discord.Embed(
         title=f"📅 Week {week} Matchups",
@@ -92,11 +109,11 @@ def build_nextweek_embed(week: str, games: list, data: dict) -> discord.Embed:
 
     deadline_hours = int(data.get("deadline_hours", 48))
     week_start = datetime.fromisoformat(data["week_start"])
-    deadline = week_start.timestamp() + (deadline_hours * 3600)
+    deadline = week_start + timedelta(hours=deadline_hours)
 
     embed.add_field(
         name="🏆 Deadline",
-        value=f"Ends: <t:{int(deadline)}:F>",
+        value=f"Ends: <t:{int(deadline.timestamp())}:F>",
         inline=False
     )
 
@@ -143,6 +160,7 @@ class NextWeek(commands.Cog):
         embed = build_nextweek_embed(str(next_week), games, data)
 
         msg = await channel.send(embed=embed)
+
         data.setdefault("messages", {})
         data["messages"][str(next_week)] = msg.id
 
