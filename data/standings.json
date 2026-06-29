@@ -3,11 +3,11 @@
     "standings_message_id": 1521262199811866770,
     "teams": {
         "Denver Broncos": {
-            "wins": 1,
+            "wins": 2,
             "losses": 0,
-            "pf": 15,
+            "pf": 29,
             "pa": 0,
-            "streak": 1
+            "streak": 2
         },
         "Arizona Cardinals": {
             "wins": 1,
@@ -53,10 +53,10 @@
         },
         "Chicago Bears": {
             "wins": 1,
-            "losses": 0,
+            "losses": 1,
             "pf": 14,
-            "pa": 0,
-            "streak": 1
+            "pa": 14,
+            "streak": -1
         },
         "Tampa Buccaneers": {
             "wins": 0,
