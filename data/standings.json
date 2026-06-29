@@ -94,11 +94,11 @@
             "streak": -1
         },
         "Philadelphia Eagles": {
-            "wins": 0,
+            "wins": 1,
             "losses": 1,
-            "pf": 0,
+            "pf": 14,
             "pa": 14,
-            "streak": -1
+            "streak": 1
         },
         "Buffalo Bills": {
             "wins": 0,
@@ -109,10 +109,10 @@
         },
         "Carolina Panthers": {
             "wins": 0,
-            "losses": 1,
+            "losses": 2,
             "pf": 0,
-            "pa": 15,
-            "streak": -1
+            "pa": 29,
+            "streak": -2
         }
     }
 }
