@@ -11,10 +11,10 @@
         },
         "Arizona Cardinals": {
             "wins": 1,
-            "losses": 0,
+            "losses": 1,
             "pf": 14,
-            "pa": 0,
-            "streak": 1
+            "pa": 14,
+            "streak": -1
         },
         "San Francisco 49ers": {
             "wins": 1,
@@ -38,11 +38,11 @@
             "streak": -1
         },
         "Dallas Cowboys": {
-            "wins": 1,
+            "wins": 2,
             "losses": 0,
-            "pf": 14,
+            "pf": 28,
             "pa": 0,
-            "streak": 1
+            "streak": 2
         },
         "Baltimore Ravens": {
             "wins": 1,
