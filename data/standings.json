@@ -60,10 +60,10 @@
         },
         "Tampa Buccaneers": {
             "wins": 0,
-            "losses": 1,
+            "losses": 2,
             "pf": 0,
-            "pa": 14,
-            "streak": -1
+            "pa": 28,
+            "streak": -2
         },
         "Miami Dolphins": {
             "wins": 1,
@@ -73,11 +73,11 @@
             "streak": 1
         },
         "Houston Texans": {
-            "wins": 0,
+            "wins": 1,
             "losses": 1,
-            "pf": 0,
+            "pf": 14,
             "pa": 14,
-            "streak": -1
+            "streak": 1
         },
         "Los Angeles Rams": {
             "wins": 0,
