@@ -18,10 +18,10 @@
         },
         "San Francisco 49ers": {
             "wins": 1,
-            "losses": 0,
-            "pf": 14,
-            "pa": 0,
-            "streak": 1
+            "losses": 1,
+            "pf": 26,
+            "pa": 50,
+            "streak": -1
         },
         "Atlanta Falcons": {
             "wins": 2,
@@ -45,11 +45,11 @@
             "streak": 2
         },
         "Baltimore Ravens": {
-            "wins": 1,
+            "wins": 2,
             "losses": 0,
-            "pf": 14,
-            "pa": 0,
-            "streak": 1
+            "pf": 64,
+            "pa": 12,
+            "streak": 2
         },
         "Chicago Bears": {
             "wins": 1,
